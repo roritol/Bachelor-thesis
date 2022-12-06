@@ -45,9 +45,10 @@ for text in texts:
 
 
 # creating a context dictionairy usin fastext
-context_dict = create_context_dict(wiki_all_text)
+context_dict = create_context_dict(wiki_all_text, window=2)
 
 # get pre trained fastext model code is now replaced with a load file
 ft = fasttext.load_model("././Data/ft_reduced_100.bin")
+
 
 
