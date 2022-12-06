@@ -11,8 +11,8 @@ import datasets
 
 
 # import baroni
-neg_file = "../Data_shared/eacl2012-data/negative-examples.txtinput"
-pos_file = "../Data_shared/eacl2012-data/positive-examples.txtinput"
+neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
+pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
 filenames = ["neg_file", "pos_file"]
 
 for i, file in enumerate([neg_file, pos_file]):
