@@ -26,12 +26,12 @@ for i, file in enumerate([neg_file, pos_file]):
     f.close()
 
 baroni = sum(results_neg_file, []) + sum(results_pos_file, [])
-set_baroni = set(baroni)
+baroni_set = set(baroni)
 
 # set wikidata to the subset of wikipedia dataset
 wikidata = datasets.load_dataset('wikipedia', '20200501.en')
 # make a subset
-wikidata = wikidata['train'][:10000]
+wikidata = wikidata['train']
 
 # unpacking the wikidata
 texts = [x for x in wikidata['text']]
@@ -43,12 +43,20 @@ for text in texts:
     text = text_preprocessing(text)
     wiki_all_text += text
 
+baroniwiki_count = {}
 
-# creating a context dictionairy usin fastext
-context_dict = create_context_dict(wiki_all_text, window=2)
+for word in baroni_set:
+    baroniwiki_count[word] = wiki_all_text.count(word)
 
-# get pre trained fastext model code is now replaced with a load file
-ft = fasttext.load_model("././Data/ft_reduced_100.bin")
+with open('baroniwiki_count.pickle', 'wb') as handle:
+    pickle.dump(baroniwiki_count, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+# # creating a context dictionairy usin fastext
+# context_dict = create_context_dict(wiki_all_text, window=2)
+
+# # get pre trained fastext model code is now replaced with a load file
+# ft = fasttext.load_model("././Data/ft_reduced_100.bin")
 
 
 
