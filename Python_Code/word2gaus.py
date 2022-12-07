@@ -33,16 +33,18 @@ wikidata = datasets.load_dataset('wikipedia', '20200501.en')
 # make a subset
 wikidata = wikidata['train']
 
+print("start unpacking wiki data")
 # unpacking the wikidata
 texts = [x for x in wikidata['text']]
 
 wiki_all_text = []
 
-for text in texts:
+for text in tqdm(texts):
     # Appending preprocessed text to the "all text" list
     text = text_preprocessing(text)
     wiki_all_text += text
 
+print("create a wiki counter")
 wiki_count = Counter(tqdm(wiki_all_text))
 
 baroniwiki_count = {k: wiki_count.get(k, None) for k in baroni_set}
