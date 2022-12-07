@@ -9,7 +9,6 @@ import fasttext.util
 from utility import text_preprocessing, create_context_dict
 import datasets
 from collections import Counter
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 # import baroni
 neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
