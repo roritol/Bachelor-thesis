@@ -43,7 +43,7 @@ for text in texts:
     text = text_preprocessing(text)
     wiki_all_text += text
 
-wiki_count = collections.counter(wiki_all_text)
+wiki_count = Counter(tqdm(wiki_all_text))
 
 baroniwiki_count = {k: wiki_count.get(k, None) for k in baroni_set}
 
