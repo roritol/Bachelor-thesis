@@ -9,6 +9,7 @@ import fasttext.util
 from utility import text_preprocessing, create_context_dict
 import datasets
 from collections import Counter
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # import baroni
 neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
@@ -38,11 +39,22 @@ print("start unpacking wiki data")
 texts = [x for x in wikidata['text']]
 
 wiki_all_text = []
+chunk = int(len(texts)/10)
+import time
 
-for text in tqdm(texts):
-    # Appending preprocessed text to the "all text" list
-    text = text_preprocessing(text)
-    wiki_all_text += text
+for i in range(10):
+    for text in tqdm(texts[i:(i+1)*chunk]):
+        # Appending preprocessed text to the "all text" list
+        text = text_preprocessing(text)
+        wiki_all_text += text
+    
+    time.sleep(1)
+    print(f"chunk {i}")
+
+with open('wiki_preprocessed.pickle', 'wb') as handle:
+    pickle.dump(wiki_all_text, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 
 print("create a wiki counter")
 wiki_count = Counter(tqdm(wiki_all_text))
