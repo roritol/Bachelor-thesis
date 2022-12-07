@@ -8,7 +8,7 @@ import fasttext
 import fasttext.util
 from utility import text_preprocessing, create_context_dict
 import datasets
-
+from collections import counter
 
 # import baroni
 neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
@@ -43,10 +43,9 @@ for text in texts:
     text = text_preprocessing(text)
     wiki_all_text += text
 
-baroniwiki_count = {}
+wiki_count = collections.counter(wiki_all_text)
 
-for word in baroni_set:
-    baroniwiki_count[word] = wiki_all_text.count(word)
+baroniwiki_count = {k: wiki_count.get(k, None) for k in baroni_set}
 
 with open('baroniwiki_count.pickle', 'wb') as handle:
     pickle.dump(baroniwiki_count, handle, protocol=pickle.HIGHEST_PROTOCOL)
