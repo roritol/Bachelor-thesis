@@ -8,7 +8,7 @@ import fasttext
 import fasttext.util
 from utility import text_preprocessing, create_context_dict
 import datasets
-from collections import counter
+from collections import Counter
 
 # import baroni
 neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
