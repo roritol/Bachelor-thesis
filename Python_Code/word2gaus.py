@@ -41,18 +41,64 @@ wiki_all_text = []
 chunk = int(len(texts)/10)
 import time
 
-for i in range(10):
-    for text in tqdm(texts[i:(i+1)*chunk]):
-        # Appending preprocessed text to the "all text" list
-        text = text_preprocessing(text)
-        wiki_all_text += text
-    
-    time.sleep(1)
-    print(f"chunk {i}")
+for text in tqdm(texts[0:(1)*chunk]):
+    # Appending preprocessed text to the "all text" list
+    text = text_preprocessing(text)
+    wiki_all_text += text
 
-with open('wiki_preprocessed.pickle', 'wb') as handle:
+print(f"chunk {1}")
+with open('wiki_preprocessed1.pickle', 'wb') as handle:
     pickle.dump(wiki_all_text, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+del(wiki_all_text)
+wiki_all_text = []
+
+for text in tqdm(texts[chunk:(2)*chunk]):
+    # Appending preprocessed text to the "all text" list
+    text = text_preprocessing(text)
+    wiki_all_text += text
+
+print(f"chunk {2}")
+with open('wiki_preprocessed2.pickle', 'wb') as handle:
+    pickle.dump(wiki_all_text, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+del(wiki_all_text)
+wiki_all_text = []
+
+for text in tqdm(texts[(2)*chunk:(3)*chunk]):
+    # Appending preprocessed text to the "all text" list
+    text = text_preprocessing(text)
+    wiki_all_text += text
+
+
+print(f"chunk {3}")
+with open('wiki_preprocessed3.pickle', 'wb') as handle:
+    pickle.dump(wiki_all_text, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+del(wiki_all_text)
+wiki_all_text = []
+
+for text in tqdm(texts[(3)*chunk:(4)*chunk]):
+    # Appending preprocessed text to the "all text" list
+    text = text_preprocessing(text)
+    wiki_all_text += text
+
+print(f"chunk {4}")
+with open('wiki_preprocessed4.pickle', 'wb') as handle:
+    pickle.dump(wiki_all_text, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+del(wiki_all_text)
+wiki_all_text = []
+
+for text in tqdm(texts[(4)*chunk:(5)*chunk]):
+    # Appending preprocessed text to the "all text" list
+    text = text_preprocessing(text)
+    wiki_all_text += text
+
+print(f"chunk {5}")
+
+with open('wiki_preprocessed5.pickle', 'wb') as handle:
+    pickle.dump(wiki_all_text, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 print("create a wiki counter")
