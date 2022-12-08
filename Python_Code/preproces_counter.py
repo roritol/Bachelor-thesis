@@ -99,6 +99,9 @@ baroni_set = set(baroni)
 
 # with open('wiki_preprocessed5.pickle', 'wb') as handle:
 #     pickle.dump(wiki_all_text, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+print("open pickeled data:")
+
 with open('wiki_preprocessed1.pickle', 'rb') as f:
         wiki_preprocessed1 = pickle.load(f)
 
@@ -114,12 +117,20 @@ with open('wiki_preprocessed4.pickle', 'rb') as f:
 with open('wiki_preprocessed5.pickle', 'rb') as f:
         wiki_preprocessed5 = pickle.load(f)
 
-wiki_preprocessed = wiki_preprocessed1 + wiki_preprocessed2 + wiki_preprocessed3 + wiki_preprocessed4 + wiki_preprocessed5
-
 print("create a wiki counter")
-wiki_count = Counter(tqdm(wiki_preprocessed))
+wiki_count1 = Counter(tqdm(wiki_preprocessed1))
+wiki_count2 = Counter(tqdm(wiki_preprocessed2))
+wiki_count3 = Counter(tqdm(wiki_preprocessed3))
+wiki_count4 = Counter(tqdm(wiki_preprocessed4))
+wiki_count5 = Counter(tqdm(wiki_preprocessed5))
 
-baroniwiki_count = {k: wiki_count.get(k, None) for k in baroni_set}
+baroniwiki_count1 = Counter({k: wiki_count1.get(k, None) for k in baroni_set})
+baroniwiki_count2 = Counter({k: wiki_count2.get(k, None) for k in baroni_set})
+baroniwiki_count3 = Counter({k: wiki_count3.get(k, None) for k in baroni_set})
+baroniwiki_count5 = Counter({k: wiki_count5.get(k, None) for k in baroni_set})
+baroniwiki_count4 = Counter({k: wiki_count4.get(k, None) for k in baroni_set})
+
+baroniwiki_count = baroniwiki_count1 + baroniwiki_count2 + baroniwiki_count3 + baroniwiki_count4 + baroniwiki_count5
 
 with open('baroniwiki_count.pickle', 'wb') as handle:
     pickle.dump(baroniwiki_count, handle, protocol=pickle.HIGHEST_PROTOCOL)
