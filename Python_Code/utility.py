@@ -1,5 +1,6 @@
 import re
 import numpy as np  
+from tqdm import tqdm
 
 def text_preprocessing(
     text:list,
@@ -43,7 +44,7 @@ def create_context_dict(all_text, window = 1):
     context_dict = { i : list() for i in set(all_text)}
 
 
-    for i, word in enumerate(all_text):
+    for i, word in tqdm(enumerate(all_text)):
         for w in range(window):
             # Getting the context that is ahead by *window* words
             
