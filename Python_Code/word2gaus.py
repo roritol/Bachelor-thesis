@@ -30,7 +30,7 @@ baroni_set = set(baroni)
 
 # get pre trained fastext model code is now replaced with a load file
 # fasttext.load_model('cc.en.300.bin')
-ft = fasttext.load_model("../Data/cc.en.300.bin")
+ft = fasttext.load_model("../Data/cc.en.100.bin")
 
 print("open pickeled data:")
 with open('wiki_preprocessed1.pickle', 'rb') as f:
@@ -41,19 +41,22 @@ print(("amount of words: ", len(wiki_preprocessed1)))
 # creating a context dictionairy using fastext
 print("start context dict")
 window = 5
-context_dict = create_context_dict(wiki_preprocessed1, window)
+# context_dict = create_context_dict(wiki_preprocessed1, window)
 
-with open('context_dict1.pickle', 'wb') as handle:
-    pickle.dump(context_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+# with open('context_dict1.pickle', 'wb') as handle:
+#     pickle.dump(context_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-total = np.zeros((300,300))
+with open('context_dict1.pickle', 'rb') as f:
+        context_dict = pickle.load(f)
+
+
+total = np.zeros((100,100))
 
 covariance = {}
 
 for word in tqdm(baroni_set):
-    for c_word in context_dict[word]:
-        w = ft.get_word_vector(word)
-        total += np.outer((ft.get_word_vector(c_word) - w), (ft.get_word_vector(c_word) - w))
+    for c_word in context_dict[word][500:]:
+        total += np.outer((ft.get_word_vector(c_word) - ft.get_word_vector(word)), (ft.get_word_vector(c_word) - ft.get_word_vector(word)))
     
     covariance[word] = (total / (len(context_dict[word]) * window))
 
@@ -70,7 +73,7 @@ df1 = pd.DataFrame(baroni_subset_label, columns =['Wordpair', 'True label'])
 
 baroni_subset_kl = []
 
-for wordpair in (results_pos_file + results_neg_file):
+for wordpair in tqdm((results_pos_file + results_neg_file)):
     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
     covariance_matrix1 = torch.from_numpy(covariance[wordpair[0]])
     mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
@@ -108,7 +111,7 @@ df1['COS score'] = baroni_subset_cos
 # with open('wiki_preprocessed5.pickle', 'rb') as f:
 #         wiki_preprocessed5 = pickle.load(f)
 
-
+0
 with open('df1.pickle', 'wb') as handle:
     pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
