@@ -2,3 +2,4 @@ Data/
 Data/
 References/
 Python_Code/*.pickle
+!Python_Code/baroniwiki_count.pickle
