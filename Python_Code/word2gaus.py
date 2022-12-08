@@ -30,7 +30,7 @@ baroni_set = set(baroni)
 
 # get pre trained fastext model code is now replaced with a load file
 # fasttext.load_model('cc.en.300.bin')
-ft = fasttext.load_model("../Data/cc.en.100.bin")
+ft = fasttext.load_model("../Data/ft_reduced_100.bin")
 
 print("open pickeled data:")
 with open('wiki_preprocessed1.pickle', 'rb') as f:
@@ -44,7 +44,7 @@ window = 5
 context_dict = create_context_dict(wiki_preprocessed1, window)
 
 with open('context_dict1.pickle', 'wb') as handle:
-    pickle.dump(context_dict1, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(context_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 total = np.zeros((300,300))
 
