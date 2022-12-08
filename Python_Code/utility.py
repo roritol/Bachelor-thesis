@@ -1,6 +1,8 @@
 import re
 import numpy as np  
 from tqdm import tqdm
+from numpy.linalg import norm
+from scipy.spatial import distance
 
 def text_preprocessing(
     text:list,
@@ -56,3 +58,15 @@ def create_context_dict(all_text, window = 1):
 
 
     return context_dict
+
+def cosine_similarity(a, b):
+    nominator = np.dot(a, b)
+    
+    a_norm = np.sqrt(np.sum(a**2))
+    b_norm = np.sqrt(np.sum(b**2))
+    
+    denominator = a_norm * b_norm
+    
+    cosine_similarity = nominator / denominator
+    
+    return cosine_similarity
