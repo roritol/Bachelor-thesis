@@ -107,6 +107,7 @@ with open('wiki_preprocessed1.pickle', 'rb') as f:
 
 wiki_count1 = Counter(tqdm(wiki_preprocessed1))
 baroniwiki_count1 = Counter({k: wiki_count1.get(k, None) for k in baroni_set})
+del(wiki_preprocessed1)
 del(wiki_count1)
 
 with open('wiki_preprocessed2.pickle', 'rb') as f:
@@ -114,6 +115,7 @@ with open('wiki_preprocessed2.pickle', 'rb') as f:
 
 wiki_count2 = Counter(tqdm(wiki_preprocessed2))
 baroniwiki_count2 = Counter({k: wiki_count2.get(k, None) for k in baroni_set})
+del(wiki_preprocessed2)
 del(wiki_count2)
 
 with open('wiki_preprocessed3.pickle', 'rb') as f:
@@ -121,6 +123,7 @@ with open('wiki_preprocessed3.pickle', 'rb') as f:
 
 wiki_count3 = Counter(tqdm(wiki_preprocessed3))
 baroniwiki_count3 = Counter({k: wiki_count3.get(k, None) for k in baroni_set})
+del(wiki_preprocessed3)
 del(wiki_count3)
 
 with open('wiki_preprocessed4.pickle', 'rb') as f:
@@ -128,6 +131,7 @@ with open('wiki_preprocessed4.pickle', 'rb') as f:
 
 wiki_count4 = Counter(tqdm(wiki_preprocessed4))
 baroniwiki_count4 = Counter({k: wiki_count4.get(k, None) for k in baroni_set})
+del(wiki_preprocessed4)
 del(wiki_count4)
 
 with open('wiki_preprocessed5.pickle', 'rb') as f:
@@ -135,6 +139,7 @@ with open('wiki_preprocessed5.pickle', 'rb') as f:
 
 wiki_count5 = Counter(tqdm(wiki_preprocessed5))
 baroniwiki_count5 = Counter({k: wiki_count5.get(k, None) for k in baroni_set})
+del(wiki_preprocessed5)
 del(wiki_count5)
 
 print("create a wiki counter")
