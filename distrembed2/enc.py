@@ -1,6 +1,7 @@
 from typing import List
 from collections import Counter
 from tqdm import trange
+import pickle5 as pickle 
 
 import torch
 
@@ -46,6 +47,7 @@ class EmbedAverages(torch.nn.Module):
     def __init__(self, n_words, dim):
 
         super().__init__()
+        # matrix of wordvector sums
         self.register_buffer("_sum", torch.zeros(n_words, dim))
         self.register_buffer("_ssq", torch.zeros(n_words, dim))
         self.register_buffer("_sum_normed", torch.zeros(n_words, dim))
@@ -56,8 +58,12 @@ class EmbedAverages(torch.nn.Module):
         self._counts[ix] += 1
         self._sum[ix] += vec
         self._ssq[ix] += vec ** 2
-        self._sum_normed[ix] += vec / torch.norm(vec, dim=-1, keepdim=True)
+        # self._sum_normed[ix] += vec / torch.norm(vec, dim=-1, keepdim=True)
 
+# after you made the lookup tabel you have to take the row vector from sum matrix 
+# corrsponding to the taget word and devide it by the count 
+
+# vocab wil give index of target word 
 
 class Tokenizer:
 
@@ -75,42 +81,42 @@ class Tokenizer:
 
 
 def main():
-    neg_file = "../Thesis_Git/Data_Shared/eacl2012-data/negative-examples.txtinput"
-    pos_file = "../Thesis_Git/Data_Shared/eacl2012-data/positive-examples.txtinput"
+    neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
+    pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
-    
 
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     batch_size = 128
     unk_thresh = 10
 
-    # fname = "/Users/rori/Documents/UVA_4/Thesis_git/Data_Shared/eacl2012-data/positive-examples.txtinput"
-
-    # with open(fname) as f:
-    #     seqs = [line.strip() for line in f]
     seqs = baroni
     tok = Tokenizer()
     vocab = Vocab()
     vocab.fit(tok.words(seqs))
 
-    with open("/Users/rori/Documents/UVA_4/data_distrembed/roen.vocab", "w") as f:
+    with open("../data_distrembed/roen.vocab", "w") as f:
         for w in vocab._toks:
             print(w, file=f)
 
 
     embavg = EmbedAverages(len(vocab), dim=768)
     model = DistilBertModel.from_pretrained("distilbert-base-uncased")
-
     model.to(device=device)
 
+    # seqs has to become the wiki dataset 
+    with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
+        seqs = pickle.load(handle)
+
     n_batches = 1 + (len(seqs) // batch_size)
+
 
     with torch.no_grad():
         for k in trange(n_batches):
             seqb = seqs[batch_size*k:batch_size*(k+1)]
 
             words, subw = tok(seqb)
+            # print("subw",  subw)
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
             out = model(**mbart_input, return_dict=True)
             embs = out['last_hidden_state'].to(device='cpu')
@@ -118,10 +124,19 @@ def main():
             for b in range(len(seqb)):
                 # accumulate eos token
                 for i, w in enumerate(words[b]):
+                    # print("b ",  b)
+                    # print("w ", w)
+                    # print("i ", i)
                     span = subw.word_to_tokens(b, i)
+                    # print("span ",  span)
                     if span is None:
                         continue
+                    
+                    if w not in vocab._tok_to_id:
+                        continue
+
                     vec = embs[b, span.start]
+                    # print("vec ",  vec)
                     embavg.add(vocab._tok_to_id[w], vec)
 
                     if vocab._tok_counts[w] < unk_thresh:
@@ -131,7 +146,7 @@ def main():
                     eos_ix = span.end
                     embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
 
-    torch.save(embavg, "/Users/rori/Documents/UVA_4/data_distrembed/roen.avgs.pt")
+    torch.save(embavg, "../data_distrembed/roen.avgs.pt")
 
 
 if __name__ == '__main__':

@@ -30,6 +30,7 @@ with open("/Users/rori/Documents/UVA_4/data_distrembed/roen.vocab", "r") as f:
 print(len(n_words))
 print(len(embavg._counts))
 
+print(embavg._tok_to_id("church"))
 
 # # Create a dictionary that maps words to their vector representations
 # word_vectors = {}
