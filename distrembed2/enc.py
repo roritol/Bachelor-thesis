@@ -42,23 +42,43 @@ class Vocab:
         return len(self._toks)
 
 
+# class EmbedAverages(torch.nn.Module):
+
+#     def __init__(self, n_words, dim):
+
+#         super().__init__()
+#         # matrix of wordvector sums
+#         self.register_buffer("_sum", torch.zeros(n_words, dim))
+#         self.register_buffer("_ssq", torch.zeros(n_words, dim))
+#         self.register_buffer("_sum_normed", torch.zeros(n_words, dim))
+#         self.register_buffer("_counts", torch.zeros(n_words, dtype=torch.long))
+
+#     def add(self, ix, vec):
+#         # could use B.index_add(0, ix, torch.ones_like(ix, dtype=torch.float)
+#         self._counts[ix] += 1
+#         self._sum[ix] += vec
+#         self._ssq[ix] += vec ** 2
+#         # self._sum_normed[ix] += vec / torch.norm(vec, dim=-1, keepdim=True)
+
 class EmbedAverages(torch.nn.Module):
-
     def __init__(self, n_words, dim):
-
         super().__init__()
         # matrix of wordvector sums
         self.register_buffer("_sum", torch.zeros(n_words, dim))
-        self.register_buffer("_ssq", torch.zeros(n_words, dim))
-        self.register_buffer("_sum_normed", torch.zeros(n_words, dim))
         self.register_buffer("_counts", torch.zeros(n_words, dtype=torch.long))
-
+        self.register_buffer("_cov", torch.zeros(n_words, dim, dim))
+    
     def add(self, ix, vec):
-        # could use B.index_add(0, ix, torch.ones_like(ix, dtype=torch.float)
         self._counts[ix] += 1
         self._sum[ix] += vec
-        self._ssq[ix] += vec ** 2
-        # self._sum_normed[ix] += vec / torch.norm(vec, dim=-1, keepdim=True)
+        self._cov[ix] += vec.t() @ vec
+    
+    def get_covariance(self, ix):
+        mean = self._sum[ix] / self._counts[ix]
+        cov = self._cov[ix] / self._counts[ix] - mean.t() @ mean
+        return cov
+
+
 
 # after you made the lookup tabel you have to take the row vector from sum matrix 
 # corrsponding to the taget word and devide it by the count 
@@ -94,6 +114,7 @@ def main():
     tok = Tokenizer()
     vocab = Vocab()
     vocab.fit(tok.words(seqs))
+    print(vocab._tok_to_id.get("church"))
 
     with open("../data_distrembed/roen.vocab", "w") as f:
         for w in vocab._toks:
@@ -124,11 +145,7 @@ def main():
             for b in range(len(seqb)):
                 # accumulate eos token
                 for i, w in enumerate(words[b]):
-                    # print("b ",  b)
-                    # print("w ", w)
-                    # print("i ", i)
                     span = subw.word_to_tokens(b, i)
-                    # print("span ",  span)
                     if span is None:
                         continue
                     
@@ -136,7 +153,6 @@ def main():
                         continue
 
                     vec = embs[b, span.start]
-                    # print("vec ",  vec)
                     embavg.add(vocab._tok_to_id[w], vec)
 
                     if vocab._tok_counts[w] < unk_thresh:
@@ -146,8 +162,27 @@ def main():
                     eos_ix = span.end
                     embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
 
+
+    
     torch.save(embavg, "../data_distrembed/roen.avgs.pt")
 
+    # Initialize the EmbedCovariances module
+    ecov = EmbedAverages(len(vocab), 768)
+
+    # Iterate over the sequences in baroni
+    for sequence in baroni:
+        # Tokenize the sequence
+        words, subw = tok([sequence])
+        # Get the tokenized words and the corresponding embeddings
+        words, embeddings = words[0], subw["input_ids"][0]
+        # Iterate over the words and their embeddings in the sequence
+        for word, embedding in zip(words, embeddings):
+            # Get the index of the word in the vocabulary
+            ix = vocab._tok_to_id.get(word, vocab._tok_to_id["<unk>"])
+            # Add the embedding to the EmbedCovariances module
+            ecov.add(ix, embedding)
+
+    torch.save(ecov, "../data_distrembed/ecov.pt")
 
 if __name__ == '__main__':
     main()

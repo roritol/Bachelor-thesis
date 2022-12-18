@@ -4,6 +4,24 @@ from tqdm import tqdm
 from numpy.linalg import norm
 from scipy.spatial import distance
 
+def import_baroni(neg_file, pos_file):
+    filenames = ["neg_file", "pos_file"]
+
+    for i, file in enumerate([neg_file, pos_file]):
+        globals()['results_{}'.format(filenames[i])] = []
+        
+        with open(file) as f:
+            line = f.readline()
+            while line:
+                globals()['results_{}'.format(filenames[i])].append(line.replace("-n", "").replace("\n", "").strip("").split("\t"))
+                line = f.readline()
+        f.close()
+
+    baroni = sum(results_neg_file, []) + sum(results_pos_file, [])
+    baroni_set = set(baroni)
+
+    return results_neg_file, results_pos_file, baroni, baroni_set
+
 def text_preprocessing(
     text:list,
     punctuations = r'''!()-[]{};:'"\,<>./?@#$%^&*_“~''',
