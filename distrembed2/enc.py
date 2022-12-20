@@ -161,7 +161,7 @@ def main():
 
     
     torch.save(embavg, "../data_distrembed/first10.avgs.pt")
-
+    
 
 if __name__ == '__main__':
     main()
