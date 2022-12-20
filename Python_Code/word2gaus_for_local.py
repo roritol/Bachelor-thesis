@@ -36,6 +36,12 @@ def calculate_kl(covariance, ft, wordpair):
     return float(torch.distributions.kl.kl_divergence(p, q))
 
 
+# with open('context_dict1.pickle', 'wb') as handle:
+#     pickle.dump(context_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+# with open('context_dict1.pickle', 'rb') as f:
+#         context_dict = pickle.load(f)
+
 def main():
     
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
@@ -49,19 +55,11 @@ def main():
             wiki_all_text = pickle.load(f)
 
     # creating a context dictionary
-    print("start context dict")
+    print("create context dict")
     window = 5
     context_dict = create_context_dict(wiki_all_text, window)
-
-    # with open('context_dict1.pickle', 'wb') as handle:
-    #     pickle.dump(context_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    # with open('context_dict1.pickle', 'rb') as f:
-    #         context_dict = pickle.load(f)
-
     combined_set = set(wiki_all_text)&set(baroni_set)
     covariance = calculate_covariance(context_dict, combined_set, ft, window)
-
     baroni_pos_subset, baroni_neg_subset = create_combined_subset(covariance, results_neg_file, results_pos_file, combined_set)
 
     baroni_subset_label = []

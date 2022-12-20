@@ -29,10 +29,11 @@ class Vocab:
 
     def __init__(self):
         self._tok_counts = Counter()
+        self._id_to_tok = {}
 
-    def fit(self, data):
+    def fit(self, data, word_list):
         for sequence in data:
-            self._tok_counts.update(sequence)
+            self._tok_counts.update([tok for tok in sequence if tok in word_list])
 
         self._toks = (["</s>", "<unk>"] +
                       [tok for tok, _ in self._tok_counts.most_common()])
@@ -41,24 +42,6 @@ class Vocab:
     def __len__(self):
         return len(self._toks)
 
-
-# class EmbedAverages(torch.nn.Module):
-
-#     def __init__(self, n_words, dim):
-
-#         super().__init__()
-#         # matrix of wordvector sums
-#         self.register_buffer("_sum", torch.zeros(n_words, dim))
-#         self.register_buffer("_ssq", torch.zeros(n_words, dim))
-#         self.register_buffer("_sum_normed", torch.zeros(n_words, dim))
-#         self.register_buffer("_counts", torch.zeros(n_words, dtype=torch.long))
-
-#     def add(self, ix, vec):
-#         # could use B.index_add(0, ix, torch.ones_like(ix, dtype=torch.float)
-#         self._counts[ix] += 1
-#         self._sum[ix] += vec
-#         self._ssq[ix] += vec ** 2
-#         # self._sum_normed[ix] += vec / torch.norm(vec, dim=-1, keepdim=True)
 
 class EmbedAverages(torch.nn.Module):
     def __init__(self, n_words, dim):
@@ -71,19 +54,15 @@ class EmbedAverages(torch.nn.Module):
     def add(self, ix, vec):
         self._counts[ix] += 1
         self._sum[ix] += vec
-        self._cov[ix] += vec.t() @ vec
+        self._cov[ix] += vec.reshape([len(vec), 1]) @ vec.reshape([1, len(vec)])
     
-    def get_covariance(self, ix):
+    def get_mean_covariance(self, ix):
         mean = self._sum[ix] / self._counts[ix]
-        cov = self._cov[ix] / self._counts[ix] - mean.t() @ mean
-        return cov
+        d = len(mean)
+        cov = self._cov[ix] / self._counts[ix] - mean.reshape([d, 1])  @ mean.reshape([1, d])
+        cov = .001 * torch.eye(d) + cov
+        return mean, cov
 
-
-
-# after you made the lookup tabel you have to take the row vector from sum matrix 
-# corrsponding to the taget word and devide it by the count 
-
-# vocab wil give index of target word 
 
 class Tokenizer:
 
@@ -100,20 +79,40 @@ class Tokenizer:
         return words, subw
 
 
+def calculate_kl(wordpair):
+    # Get the mean vectors and covariance matrices for the two words in the word pair
+    mean1, covariance_matrix1 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[0])) 
+    mean2, covariance_matrix2 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[1])) 
+    
+    # Create PyTorch multivariate normal distributions using the mean vectors and covariance matrices
+    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+
+    # Calculate the KL divergence between the two distributions
+    kl = torch.distributions.kl.kl_divergence(p, q)
+
+    return kl.item()
+
+
 def main():
+    
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
+    batch_size = 128
+    unk_thresh = 20
+
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
 
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    # seqs has to become the wiki dataset 
+    with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
+        seqs = pickle.load(handle)
 
-    batch_size = 128
-    unk_thresh = 10
 
-    seqs = baroni
     tok = Tokenizer()
     vocab = Vocab()
-    vocab.fit(tok.words(seqs))
+    vocab.fit(tok.words(seqs), baroni)
     print(vocab._tok_to_id.get("church"))
 
     with open("../data_distrembed/roen.vocab", "w") as f:
@@ -125,19 +124,16 @@ def main():
     model = DistilBertModel.from_pretrained("distilbert-base-uncased")
     model.to(device=device)
 
-    # seqs has to become the wiki dataset 
-    with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
-        seqs = pickle.load(handle)
+    n_batches = 1 + (len(seqs[:]) // batch_size)
 
-    n_batches = 1 + (len(seqs) // batch_size)
-
-
+    # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
     with torch.no_grad():
         for k in trange(n_batches):
+            # grab a batch_size chunk from seqs (wiki data)
             seqb = seqs[batch_size*k:batch_size*(k+1)]
 
+            # tokenize the batch, feed to bert, add last hidden state to embs
             words, subw = tok(seqb)
-            # print("subw",  subw)
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
             out = model(**mbart_input, return_dict=True)
             embs = out['last_hidden_state'].to(device='cpu')
@@ -164,25 +160,8 @@ def main():
 
 
     
-    torch.save(embavg, "../data_distrembed/roen.avgs.pt")
+    torch.save(embavg, "../data_distrembed/first10.avgs.pt")
 
-    # Initialize the EmbedCovariances module
-    ecov = EmbedAverages(len(vocab), 768)
-
-    # Iterate over the sequences in baroni
-    for sequence in baroni:
-        # Tokenize the sequence
-        words, subw = tok([sequence])
-        # Get the tokenized words and the corresponding embeddings
-        words, embeddings = words[0], subw["input_ids"][0]
-        # Iterate over the words and their embeddings in the sequence
-        for word, embedding in zip(words, embeddings):
-            # Get the index of the word in the vocabulary
-            ix = vocab._tok_to_id.get(word, vocab._tok_to_id["<unk>"])
-            # Add the embedding to the EmbedCovariances module
-            ecov.add(ix, embedding)
-
-    torch.save(ecov, "../data_distrembed/ecov.pt")
 
 if __name__ == '__main__':
     main()

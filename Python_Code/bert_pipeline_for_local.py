@@ -30,20 +30,25 @@ class Vocab:
         return len(self._toks)
 
 class EmbedAverages(torch.nn.Module):
-
     def __init__(self, n_words, dim):
-
         super().__init__()
         # matrix of wordvector sums
         self.register_buffer("_sum", torch.zeros(n_words, dim))
-        self.register_buffer("_ssq", torch.zeros(n_words, dim))
-        self.register_buffer("_sum_normed", torch.zeros(n_words, dim))
         self.register_buffer("_counts", torch.zeros(n_words, dtype=torch.long))
-
+        self.register_buffer("_cov", torch.zeros(n_words, dim, dim))
+    
     def add(self, ix, vec):
         self._counts[ix] += 1
         self._sum[ix] += vec
-        self._ssq[ix] += vec ** 2
+        self._cov[ix] += vec.reshape([len(vec), 1]) @ vec.reshape([1, len(vec)])
+    
+    def get_covariance(self, ix):
+        d = len(mean)
+        mean = self._sum[ix] / self._counts[ix]
+        cov = self._cov[ix] / self._counts[ix] - mean.reshape([d, 1])  @ mean.reshape([1, d])
+        cov = .001 * torch.eye(d) + cov
+        return cov
+
 
 class Tokenizer:
 
@@ -59,32 +64,6 @@ class Tokenizer:
                                          padding=True)
         return words, subw
 
-def calculate_covariance(context_dict, baroni_set, ft, window):
-    covariance = {}
-
-    for word in tqdm(baroni_set):
-        total = np.zeros((100,100))
-
-        for c_word in context_dict[word]:
-            total += np.outer((ft.get_word_vector(c_word) - ft.get_word_vector(word)), (ft.get_word_vector(c_word) - ft.get_word_vector(word)))
-
-        covariance[word] = (total / (len(context_dict[word]) * window))
-
-    return covariance
-
-def create_word_covariance_matrix(embed_averages, i, word):
-    # Extract the mean and variance tensors for the word at index i
-    mean_tensor = embed_averages._sum[i] / embed_averages._counts[i]
-    var_tensor = (embed_averages._ssq[i] - mean_tensor ** 2) / embed_averages._counts[i]
-
-    # Stack the mean and variance tensors along the second dimension
-    mean_var_tensor = torch.stack([mean_tensor, var_tensor], dim=1)
-
-    # Calculate the covariance matrix for the word by taking the outer product of the mean_var_tensor
-    # with itself
-    cov_matrix = mean_var_tensor.t() @ mean_var_tensor
-
-    return cov_matrix
 
 def calculate_kl(covariance, wordpair):
     # Get the mean vectors and covariance matrices for the two words in the word pair
@@ -120,23 +99,16 @@ def main():
 
     # print(len(covariance_BERT))
 
-    embavg = torch.load('../data_distrembed/roen.avgs.pt')
+    # embavg = torch.load('../data_distrembed/roen.avgs.pt')
+    embavg = torch.load('../data_distrembed/first10.avgs.pt')
 
     seqs = baroni
     vocab = Vocab()
     tok = Tokenizer()
     vocab.fit(tok.words(seqs))
     
-    # covariance = calculate_covariance(context_dict, combined_set, ft, window)
-    # Calculate the covariance matrix for each word
-
-    word_cov_matrices = {}
-    for i in range(len(embavg._counts)):
-        word = vocab._id_to_tok[i]
-        word_cov_matrix = create_word_covariance_matrix(embavg, i, word)
-        word_cov_matrices[word] = [word_cov_matrix, embavg._sum[i]]
-
-    # baroni_pos_subset, baroni_neg_subset = create_combined_subset(word_cov_matrices, results_neg_file, results_pos_file, combined_set)
+    print(embavg.get_covariance(467))
+    
 
     baroni_subset_label = []
 
