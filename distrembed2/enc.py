@@ -2,8 +2,13 @@ from typing import List
 from collections import Counter
 from tqdm import trange
 import pickle5 as pickle 
-
+import datasets
 import torch
+import pandas as pd
+from tqdm import tqdm
+from sklearn.metrics import average_precision_score
+
+
 
 from transformers import (DistilBertTokenizerFast, DistilBertModel)
 
@@ -94,6 +99,19 @@ def calculate_kl(wordpair):
     return kl.item()
 
 
+def cosine_similarity(a, b):
+    nominator = torch.dot(a, b)
+    
+    a_norm = torch.sqrt(torch.sum(a**2))
+    b_norm = torch.sqrt(torch.sum(b**2))
+    
+    denominator = a_norm * b_norm
+    
+    cosine_similarity = nominator / denominator
+    
+    return cosine_similarity
+
+
 def main():
     
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
@@ -106,31 +124,36 @@ def main():
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
 
     # seqs has to become the wiki dataset 
-    with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
-        seqs = pickle.load(handle)
-
+    # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
+    #     seqs = pickle.load(handle)
+    
+    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    # # make a subset
+    wikidata = wikidata['train']['text'][:100000]  
 
     tok = Tokenizer()
     vocab = Vocab()
-    vocab.fit(tok.words(seqs), baroni)
+    vocab.fit(tok.words(wikidata), baroni)
     print(vocab._tok_to_id.get("church"))
 
-    with open("../data_distrembed/roen.vocab", "w") as f:
-        for w in vocab._toks:
-            print(w, file=f)
+    # with open("../data_distrembed/roen.vocab", "w") as f:
+    #     for w in vocab._toks:
+    #         print(w, file=f)
 
+    with open('vocab.pickle', 'wb') as f:
+        pickle.dump(vocab,f)
 
     embavg = EmbedAverages(len(vocab), dim=768)
     model = DistilBertModel.from_pretrained("distilbert-base-uncased")
     model.to(device=device)
 
-    n_batches = 1 + (len(seqs[:]) // batch_size)
+    n_batches = 1 + (len(wikidata[:]) // batch_size)
 
     # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
     with torch.no_grad():
         for k in trange(n_batches):
             # grab a batch_size chunk from seqs (wiki data)
-            seqb = seqs[batch_size*k:batch_size*(k+1)]
+            seqb = wikidata[batch_size*k:batch_size*(k+1)]
 
             # tokenize the batch, feed to bert, add last hidden state to embs
             words, subw = tok(seqb)
@@ -161,7 +184,43 @@ def main():
 
     
     torch.save(embavg, "../data_distrembed/first10.avgs.pt")
-    
+
+    # get f1 scores etc
+
+
+    baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
+    baroni_neg_subset = [x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
+
+    baroni_subset_label = []
+
+    for i in baroni_pos_subset:
+        baroni_subset_label.append([i, 1])
+
+    for i in baroni_neg_subset:
+        baroni_subset_label.append([i, 0])
+
+    # MAKE DATAFRAME
+    df1 = pd.DataFrame(baroni_subset_label, columns =['Wordpair', 'True label'])
+
+
+    # CALCULATE KL and COS
+    baroni_subset_kl = []
+    baroni_subset_cos = []
+
+    for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
+        baroni_subset_kl.append(calculate_kl(wordpair))
+        baroni_subset_cos.append(cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
+                                                embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
+
+    df1['KL score'] = baroni_subset_kl
+    df1['COS score'] = baroni_subset_cos
+
+    # with open('df1.pickle', 'wb') as handle:
+    #     pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    print(df1)
+    print("COS AP: ", average_precision_score(df1["True label"], df1["COS score"]))
+    print("KL AP: ", average_precision_score(df1["True label"], -df1["KL score"]))
 
 if __name__ == '__main__':
     main()
