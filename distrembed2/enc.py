@@ -127,21 +127,22 @@ def main():
     # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
     #     seqs = pickle.load(handle)
     
-    # wikidata = datasets.load_dataset('wikipedia', '20200501.en', split='train')
-    # # # make a subset
-    # wikidata = wikidata['train']['text'][:1000]
+    wikidata = datasets.load_dataset('wikipedia', '20200501.en', split='train')
+    # # make a subset
+    wikidata = wikidata['train']['text'][:5000]
     # wikidata = [line.strip() for line in wikidata]  
     
     import ast
   
     # reading the data from the file
-    with open('../Data_shared/wiki_subset.txt') as f:
-        data = f.read()
+    # with open('../Data_shared/wiki_subset.txt') as f:
+    #     data = f.read()
       
-    # reconstructing the data as a dictionary
-    wikidata = ast.literal_eval(data)
+    # # reconstructing the data as a dictionary
+    # wikidata = ast.literal_eval(data)
 
-    wikidata = wikidata["text"][:5000]   
+    # wikidata = wikidata["text"][:5000]   
+    
     max_length = 512
 
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
