@@ -145,7 +145,7 @@ def main():
     max_length = 480
 
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in trange(wikidata)
+            for seq in tqdm(wikidata)
             for sentence in seq.split(".")]
     
     # print("wikidata", wikidata)
