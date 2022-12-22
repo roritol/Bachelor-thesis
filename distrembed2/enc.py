@@ -127,7 +127,7 @@ def main():
     # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
     #     seqs = pickle.load(handle)
     
-    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # # make a subset
     wikidata = wikidata['train']['text'][:1000]  
     print("wikidata", wikidata)
@@ -186,7 +186,7 @@ def main():
     torch.save(embavg, "../data_distrembed/first10.avgs.pt")
 
     # get f1 scores etc
-    
+
 
     baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
     baroni_neg_subset = [x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
