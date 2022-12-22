@@ -84,7 +84,7 @@ class Tokenizer:
         return words, subw
 
 
-def calculate_kl(wordpair):
+def calculate_kl(wordpair, embavg, vocab):
     # Get the mean vectors and covariance matrices for the two words in the word pair
     mean1, covariance_matrix1 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[0])) 
     mean2, covariance_matrix2 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[1])) 
@@ -127,18 +127,33 @@ def main():
     # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
     #     seqs = pickle.load(handle)
     
-    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    # # make a subset
-    wikidata = wikidata['train']['text'][:10]  
-    print("wikidata", wikidata)
+    # wikidata = datasets.load_dataset('wikipedia', '20200501.en', split='train')
+    # # # make a subset
+    # wikidata = wikidata['train']['text'][:1000]
+    # wikidata = [line.strip() for line in wikidata]  
+    
+    import ast
+  
+    # reading the data from the file
+    with open('../Data_shared/wiki_subset.txt') as f:
+        data = f.read()
+      
+    # reconstructing the data as a dictionary
+    wikidata = ast.literal_eval(data)
+
+    wikidata = wikidata["text"][:5000]   
+    wikidata = [sentence.strip() for seq in wikidata for sentence in seq.split(".")]
+    
+    # print("wikidata", wikidata)
     tok = Tokenizer()
     vocab = Vocab()
+    # print(tok.words(wikidata))
     vocab.fit(tok.words(wikidata), baroni)
 
     print("--------------------------")
     print("--------------------------")
     print("--------------------------")
-    print("counts", vocab._tok_counts)
+    # print("counts", vocab._tok_counts)
 
     with open('vocab:1000pickle', 'wb') as f:
         pickle.dump(vocab,f)
@@ -207,7 +222,7 @@ def main():
     baroni_subset_cos = []
 
     for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
-        baroni_subset_kl.append(calculate_kl(wordpair))
+        baroni_subset_kl.append(calculate_kl(wordpair, embavg, vocab))
         baroni_subset_cos.append(cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
                                                 embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
 
