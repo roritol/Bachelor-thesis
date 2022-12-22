@@ -117,7 +117,7 @@ def main():
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     batch_size = 128
-    unk_thresh = 20
+    unk_thresh = 2
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
@@ -127,20 +127,20 @@ def main():
     # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
     #     seqs = pickle.load(handle)
     
-    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # # make a subset
-    wikidata = wikidata['train']['text'][:100]  
-
+    wikidata = wikidata['train']['text'][:1000]  
+    print("wikidata", wikidata)
     tok = Tokenizer()
     vocab = Vocab()
     vocab.fit(tok.words(wikidata), baroni)
-    print(vocab._tok_to_id.get("church"))
 
-    # with open("../data_distrembed/roen.vocab", "w") as f:
-    #     for w in vocab._toks:
-    #         print(w, file=f)
+    print("--------------------------")
+    print("--------------------------")
+    print("--------------------------")
+    print("counts", vocab._tok_counts)
 
-    with open('vocab.pickle', 'wb') as f:
+    with open('vocab:1000pickle', 'wb') as f:
         pickle.dump(vocab,f)
 
     embavg = EmbedAverages(len(vocab), dim=768)
@@ -186,7 +186,7 @@ def main():
     torch.save(embavg, "../data_distrembed/first10.avgs.pt")
 
     # get f1 scores etc
-
+    
 
     baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
     baroni_neg_subset = [x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
@@ -201,7 +201,6 @@ def main():
 
     # MAKE DATAFRAME
     df1 = pd.DataFrame(baroni_subset_label, columns =['Wordpair', 'True label'])
-
 
     # CALCULATE KL and COS
     baroni_subset_kl = []
