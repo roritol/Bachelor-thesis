@@ -142,10 +142,10 @@ def main():
 
     # wikidata = wikidata["text"][:5000]   
 
-    max_length = 512
+    max_length = 480
 
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in wikidata
+            for seq in trange(wikidata)
             for sentence in seq.split(".")]
     
     # print("wikidata", wikidata)
