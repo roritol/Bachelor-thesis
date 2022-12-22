@@ -129,7 +129,7 @@ def main():
     
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # # make a subset
-    wikidata = wikidata['train']['text'][:1000]  
+    wikidata = wikidata['train']['text'][:10]  
     print("wikidata", wikidata)
     tok = Tokenizer()
     vocab = Vocab()
