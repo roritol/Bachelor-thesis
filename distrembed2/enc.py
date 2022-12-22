@@ -142,7 +142,11 @@ def main():
     wikidata = ast.literal_eval(data)
 
     wikidata = wikidata["text"][:5000]   
-    wikidata = [sentence.strip() for seq in wikidata for sentence in seq.split(".")]
+    max_length = 512
+
+    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+            for seq in wikidata
+            for sentence in seq.split(".")]
     
     # print("wikidata", wikidata)
     tok = Tokenizer()
