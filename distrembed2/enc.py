@@ -163,7 +163,7 @@ def main():
         pickle.dump(vocab,f)
 
     embavg = EmbedAverages(len(vocab), dim=768)
-    model = DistilBertModel.from_pretrained("distilbert-base-uncased")
+    model = DistilBertModel.from_pretrained("distilbert-base-uncased", max_length=1024)
     model.to(device=device)
 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
