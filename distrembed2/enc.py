@@ -122,23 +122,19 @@ def main():
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
-
-    # seqs has to become the wiki dataset 
-    # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
-    #     seqs = pickle.load(handle)
     
-    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    # # # make a subset
-    # wikidata = wikidata['train']['text'][:5000]
-    # wikidata = [line.strip() for line in wikidata]  
+    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    # # make a subset
+    wikidata = wikidata['train']['text'][:500]
+    wikidata = [line.strip() for line in wikidata]  
     
-    import ast
-    with open('../Data_shared/wiki_subset.txt') as f:
-        data = f.read()
+    # import ast
+    # with open('../Data_shared/wiki_subset.txt') as f:
+    #     data = f.read()
 
-    wikidata = ast.literal_eval(data)
+    # wikidata = ast.literal_eval(data)
 
-    wikidata = wikidata["text"][:500]   
+    # wikidata = wikidata["text"][:500]   
 
     max_length = 200
 
