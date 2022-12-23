@@ -157,7 +157,7 @@ def main():
     print("--------------------------")
     # print("counts", vocab._tok_counts)
 
-    with open('vocab:1000pickle', 'wb') as f:
+    with open('../Data/vocab:1000pickle', 'wb') as f:
         pickle.dump(vocab,f)
 
     embavg = EmbedAverages(len(vocab), dim=768)
