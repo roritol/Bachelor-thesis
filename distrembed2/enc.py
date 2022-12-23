@@ -136,7 +136,7 @@ def main():
 
     # wikidata = wikidata["text"][:500]   
 
-    max_length = 200
+    max_length = 20
 
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
@@ -167,8 +167,6 @@ def main():
         for k in trange(n_batches):
             # grab a batch_size chunk from seqs (wiki data)
             seqb = wikidata[batch_size*k:batch_size*(k+1)]
-            print(seqb)
-            print(len(seqb))
             # tokenize the batch, feed to bert, add last hidden state to embs
             words, subw = tok(seqb)
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
