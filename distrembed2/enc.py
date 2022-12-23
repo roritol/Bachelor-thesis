@@ -125,7 +125,7 @@ def main():
     
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # # make a subset
-    wikidata = wikidata['train']['text'][:500]
+    wikidata = wikidata['train']['text'][:50000]
     wikidata = [line.strip() for line in wikidata]  
     
     # import ast
