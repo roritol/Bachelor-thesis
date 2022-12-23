@@ -116,7 +116,7 @@ def main():
     
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    batch_size = 128
+    batch_size = 50
     unk_thresh = 2
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
@@ -127,22 +127,20 @@ def main():
     # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as handle:
     #     seqs = pickle.load(handle)
     
-    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    # # make a subset
-    wikidata = wikidata['train']['text'][:5000]
+    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    # # # make a subset
+    # wikidata = wikidata['train']['text'][:5000]
     # wikidata = [line.strip() for line in wikidata]  
     
-    # import ast
-    # reading the data from the file
-    # with open('../Data_shared/wiki_subset.txt') as f:
-    #     data = f.read()
-      
-    # # reconstructing the data as a dictionary
-    # wikidata = ast.literal_eval(data)
+    import ast
+    with open('../Data_shared/wiki_subset.txt') as f:
+        data = f.read()
 
-    # wikidata = wikidata["text"][:5000]   
+    wikidata = ast.literal_eval(data)
 
-    max_length = 480
+    wikidata = wikidata["text"][:500]   
+
+    max_length = 200
 
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
@@ -163,7 +161,7 @@ def main():
         pickle.dump(vocab,f)
 
     embavg = EmbedAverages(len(vocab), dim=768)
-    model = DistilBertModel.from_pretrained("distilbert-base-uncased", max_length=1024)
+    model = DistilBertModel.from_pretrained("distilbert-base-uncased")
     model.to(device=device)
 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
@@ -183,6 +181,7 @@ def main():
             for b in range(len(seqb)):
                 # accumulate eos token
                 for i, w in enumerate(words[b]):
+                    print(w)
                     span = subw.word_to_tokens(b, i)
                     if span is None:
                         continue
