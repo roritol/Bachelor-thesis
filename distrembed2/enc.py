@@ -167,7 +167,8 @@ def main():
         for k in trange(n_batches):
             # grab a batch_size chunk from seqs (wiki data)
             seqb = wikidata[batch_size*k:batch_size*(k+1)]
-
+            print(seqb)
+            print(len(seqb))
             # tokenize the batch, feed to bert, add last hidden state to embs
             words, subw = tok(seqb)
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
@@ -177,7 +178,6 @@ def main():
             for b in range(len(seqb)):
                 # accumulate eos token
                 for i, w in enumerate(words[b]):
-                    print(w)
                     span = subw.word_to_tokens(b, i)
                     if span is None:
                         continue
