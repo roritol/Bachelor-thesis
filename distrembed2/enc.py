@@ -125,18 +125,17 @@ def main():
     
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # # make a subset
-    wikidata = wikidata['train']['text'][:50000]
-    wikidata = [line.strip() for line in wikidata]  
+    wikidata = wikidata['train']['text'][:5000]
     
-    # import ast
-    # with open('../Data_shared/wiki_subset.txt') as f:
-    #     data = f.read()
+    import ast
+    with open('../Data_shared/wiki_subset.txt') as f:
+        data = f.read()
 
-    # wikidata = ast.literal_eval(data)
+    wikidata = ast.literal_eval(data)
 
-    # wikidata = wikidata["text"][:500]   
+    wikidata = wikidata["text"][:500]   
 
-    max_length = 20
+    max_length = 120
 
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
