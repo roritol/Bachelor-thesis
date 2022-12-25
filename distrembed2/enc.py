@@ -74,7 +74,7 @@ class Tokenizer:
     def __init__(self):
         self._t = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
     def words(self, sequences: List[str]):
-        return [s.split() for s in sequences]
+        return [s.split() for s in tqdm(sequences)]
 
     def __call__(self, sequences: List[str]):
         words = self.words(sequences)
@@ -124,22 +124,21 @@ def main():
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    # # make a subset
     wikidata = wikidata['train']['text'][:5000]
     
-    import ast
-    with open('../Data_shared/wiki_subset.txt') as f:
-        data = f.read()
+    # import ast
+    # with open('../Data_shared/wiki_subset.txt') as f:
+    #     data = f.read()
 
-    wikidata = ast.literal_eval(data)
+    # wikidata = ast.literal_eval(data)
 
-    wikidata = wikidata["text"][:500]   
+    # wikidata = wikidata["text"][:500]   
 
-    max_length = 120
+    # max_length = 120
 
-    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in tqdm(wikidata)
-            for sentence in seq.split(".")]
+    # wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+    #         for seq in tqdm(wikidata)
+    #         for sentence in seq.split(".")]
     
     # print("wikidata", wikidata)
     tok = Tokenizer()
