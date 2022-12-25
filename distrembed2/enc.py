@@ -134,11 +134,11 @@ def main():
 
     # wikidata = wikidata["text"][:500]   
 
-    # max_length = 120
+    max_length = 120
 
-    # wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-    #         for seq in tqdm(wikidata)
-    #         for sentence in seq.split(".")]
+    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+            for seq in tqdm(wikidata)
+            for sentence in seq.split(".")]
     
     # print("wikidata", wikidata)
     tok = Tokenizer()
