@@ -74,7 +74,7 @@ class Tokenizer:
     def __init__(self):
         self._t = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
     def words(self, sequences: List[str]):
-        return [s.split() for s in tqdm(sequences)]
+        return [s.split() for s in sequences]
 
     def __call__(self, sequences: List[str]):
         words = self.words(sequences)
@@ -166,7 +166,7 @@ def main():
             # grab a batch_size chunk from seqs (wiki data)
             seqb = wikidata[batch_size*k:batch_size*(k+1)]
             # tokenize the batch, feed to bert, add last hidden state to embs
-            words, subw = tok(seqb)
+            words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
             out = model(**mbart_input, return_dict=True)
             embs = out['last_hidden_state'].to(device='cpu')
@@ -188,6 +188,7 @@ def main():
                         embavg.add(vocab._tok_to_id["<unk>"], vec)
 
                 if span is not None:
+                    print(span.end)
                     eos_ix = span.end
                     embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
 
