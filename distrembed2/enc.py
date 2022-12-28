@@ -140,7 +140,8 @@ def main():
 
     print("len wiki preprocessed", len(wikidata))
 
-    wikidata = wikidata[:500]   
+    wikidata = wikidata[:500]  
+    print(wikidata) 
     
     # max_length = 76
 
