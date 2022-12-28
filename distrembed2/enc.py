@@ -126,16 +126,18 @@ def main():
     # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # wikidata = wikidata['train']['text'][:5000]
     
-    import ast
-    with open('../Python_Code/wiki_preprocessed1.pickle') as f:
-        data = f.read()
+    print("open pickeled data:")
+
+    with open('wiki_preprocessed1.pickle', 'rb') as f:
+        wikidata = pickle.load(f)
 
 
     # import ast
     # with open('../Data_shared/wiki_subset.txt') as f:
     #     data = f.read()
 
-    wikidata = ast.literal_eval(data)
+    # wikidata = ast.literal_eval(data)
+    
     print("len wiki preprocessed", len(wikidata))
 
     wikidata = wikidata[:500]   
