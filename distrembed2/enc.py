@@ -116,29 +116,35 @@ def main():
     
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    batch_size = 1
-    unk_thresh = 2
+    batch_size = 500
+    unk_thresh = 10
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    wikidata = wikidata['train']['text'][:5000]
+    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    # wikidata = wikidata['train']['text'][:5000]
     
+    import ast
+    with open('../Python_Code/wiki_preprocessed1.pickle') as f:
+        data = f.read()
+
+
     # import ast
     # with open('../Data_shared/wiki_subset.txt') as f:
     #     data = f.read()
 
-    # wikidata = ast.literal_eval(data)
+    wikidata = ast.literal_eval(data)
+    print("len wiki preprocessed", len(wikidata))
 
-    # wikidata = wikidata["text"][:500]   
+    wikidata = wikidata[:500]   
+    
+    # max_length = 76
 
-    max_length = 76
-
-    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in tqdm(wikidata)
-            for sentence in seq.split(".")]
+    # wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+    #         for seq in tqdm(wikidata)
+    #         for sentence in seq.split(".")]
     
     # print("wikidata", wikidata)
     tok = Tokenizer()
@@ -151,8 +157,8 @@ def main():
     print("--------------------------")
     # print("counts", vocab._tok_counts)
 
-    with open('../Data/vocab:1000pickle', 'wb') as f:
-        pickle.dump(vocab,f)
+    # with open('../Data/vocab:1000pickle', 'wb') as f:
+    #     pickle.dump(vocab,f)
 
     embavg = EmbedAverages(len(vocab), dim=768)
     model = DistilBertModel.from_pretrained("distilbert-base-uncased")
@@ -167,7 +173,6 @@ def main():
             seqb = wikidata[batch_size*k:batch_size*(k+1)]
             # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
             words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
-            print(len(subw))
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
             out = model(**mbart_input, return_dict=True)
             embs = out['last_hidden_state'].to(device='cpu')
