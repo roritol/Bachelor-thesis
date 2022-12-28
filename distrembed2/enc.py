@@ -123,13 +123,13 @@ def main():
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    # wikidata = wikidata['train']['text'][:5000]
+    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    wikidata = wikidata['train']['text'][5000:10000]
     
-    print("open pickeled data:")
+    # print("open pickeled data:")
 
-    with open('../Python_Code/wiki_preprocessed1.pickle', 'rb') as f:
-        wikidata = pickle.load(f)
+    # with open('../Python_Code/wiki_preprocessed1.pickle', 'rb') as f:
+    #     wikidata = pickle.load(f)
 
 
     # import ast
@@ -137,28 +137,20 @@ def main():
     #     data = f.read()
 
     # wikidata = ast.literal_eval(data)
-
-    print("len wiki preprocessed", len(wikidata))
-
-    wikidata = wikidata[:500]  
-    print(wikidata) 
     
-    # max_length = 76
+    max_length = 50
 
-    # wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-    #         for seq in tqdm(wikidata)
-    #         for sentence in seq.split(".")]
+    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+            for seq in tqdm(wikidata)
+            for sentence in seq.split(".")]
     
-    # print("wikidata", wikidata)
     tok = Tokenizer()
     vocab = Vocab()
-    # print(tok.words(wikidata))
     vocab.fit(tok.words(wikidata), baroni)
 
     print("--------------------------")
     print("--------------------------")
     print("--------------------------")
-    # print("counts", vocab._tok_counts)
 
     # with open('../Data/vocab:1000pickle', 'wb') as f:
     #     pickle.dump(vocab,f)
@@ -199,8 +191,6 @@ def main():
                 if span is not None:
                     eos_ix = span.end
                     embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
-
-
 
     
     torch.save(embavg, "../data_distrembed/first10.avgs.pt")
