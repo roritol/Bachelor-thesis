@@ -116,7 +116,7 @@ def main():
     
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    batch_size = 50
+    batch_size = 1
     unk_thresh = 2
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
@@ -134,7 +134,7 @@ def main():
 
     # wikidata = wikidata["text"][:500]   
 
-    max_length = 120
+    max_length = 76
 
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
@@ -165,8 +165,9 @@ def main():
         for k in trange(n_batches):
             # grab a batch_size chunk from seqs (wiki data)
             seqb = wikidata[batch_size*k:batch_size*(k+1)]
-            # tokenize the batch, feed to bert, add last hidden state to embs
+            # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
             words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
+            print(len(subw))
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
             out = model(**mbart_input, return_dict=True)
             embs = out['last_hidden_state'].to(device='cpu')
@@ -188,9 +189,9 @@ def main():
                         embavg.add(vocab._tok_to_id["<unk>"], vec)
 
                 if span is not None:
-                    print(span.end)
                     eos_ix = span.end
                     embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
+
 
 
     
