@@ -1,6 +1,6 @@
 Data/
 data/
-References/
+references/
 python_code/*.pickle
 !python_code/baroniwiki_count.pickle
 data_distrembed/
