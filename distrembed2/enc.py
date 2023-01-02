@@ -116,7 +116,7 @@ def main():
     
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    batch_size = 400
+    batch_size = 200
     unk_thresh = 10
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
@@ -132,16 +132,12 @@ def main():
     #     wikidata = pickle.load(f)
 
 
-    max_length = 50
+    max_length = 40
 
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
             for sentence in seq.split(".")]
     
-    with open('../Data/wikidata5000_100000_len50.pickle', 'wb') as f:
-        pickle.dump(wikidata,f)
-
-    quit()
 
     tok = Tokenizer()
     vocab = Vocab()
