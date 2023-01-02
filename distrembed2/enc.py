@@ -125,7 +125,7 @@ def main():
     
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     end = 6073421/4
-    wikidata = wikidata['train']['text'][:end]
+    wikidata = wikidata['train']['text'][:int(end)]
     
     # print("open pickeled data:")
 
