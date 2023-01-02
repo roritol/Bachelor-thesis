@@ -98,8 +98,36 @@ def calculate_kl(wordpair, embavg, vocab):
 
     return kl.item()
 
+def calculate_diag_kl(wordpair, embavg, vocab):
+    # Get the mean vectors and covariance matrices for the two words in the word pair
+    mean1, covariance_matrix1 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[0])) 
+    mean2, covariance_matrix2 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[1])) 
+    
+    # Create PyTorch multivariate normal distributions using the mean vectors and covariance matrices
+    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagonal(covariance_matrix1))
+    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagonal(covariance_matrix2))
+
+    # Calculate the KL divergence between the two distributions
+    kl = torch.distributions.kl.kl_divergence(p, q)
+
+    return kl.item()
+
 
 def cosine_similarity(a, b):
+    nominator = torch.dot(a, b)
+    
+    a_norm = torch.sqrt(torch.sum(a**2))
+    b_norm = torch.sqrt(torch.sum(b**2))
+    
+    denominator = a_norm * b_norm
+    
+    cosine_similarity = nominator / denominator
+    
+    return cosine_similarity
+
+def diag_cosine_similarity(a, b):
+    a = torch.diagonal(a)
+    b = torch.diagonal(b)
     nominator = torch.dot(a, b)
     
     a_norm = torch.sqrt(torch.sum(a**2))
@@ -125,7 +153,7 @@ def main():
     
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     end = 6073421/100
-    wikidata = wikidata['train']['text'][:int(end)]
+    wikidata = wikidata['train']['text'][50000:int(end)]
     
     # print("open pickeled data:")
 
