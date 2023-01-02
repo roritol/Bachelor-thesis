@@ -6,6 +6,8 @@ from tqdm import trange
 import pickle5 as pickle 
 from python_code.utility import import_baroni, cosine_similarity, create_context_dict, text_preprocessing, addDiagonal, create_combined_subset
 import numpy as np
+import ast
+import pandas as pd
 
 import fasttext
 import fasttext.util
@@ -38,8 +40,11 @@ class Context_dict:
         self._context_dict = {}
         
     
-    def fit(self, words_of_interest):
+    def fit(self, data, words_of_interest):
         self._context_dict = {i : list() for i in set(words_of_interest)}
+        
+        for sequence in tqdm(data):
+            self._tok_counts.update([tok for tok in sequence if tok in word_list])
 
          # Creating a dictionary entry for each word in the texts
 
@@ -55,6 +60,7 @@ class Context_dict:
                     # Getting the context that is behind by *window* words    
                     if i - w - 1 >= 0:
                         self._context_dict[word].append(all_text[(i - w - 1)])
+
 
 def calculate_covariance(context_dict, ft, window):
     covariance = {}
@@ -74,13 +80,25 @@ def calculate_covariance(context_dict, ft, window):
 
     return covariance
 
+def calculate_kl(covariance, ft, wordpair):
+    mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
+    covariance_matrix1 = torch.from_numpy(covariance[wordpair[0]])
+    covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
+    mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
+    covariance_matrix2 = torch.from_numpy(covariance[wordpair[1]])
+    covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
+
+    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+
+    return float(torch.distributions.kl.kl_divergence(p, q))
+
 
 def main():
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     max_length = 50
     batch_size = 400
-    unk_thresh = 10
+    # unk_thresh = 10
     window = 5
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
@@ -97,10 +115,16 @@ def main():
     # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as f:
     #         wiki_all_text = pickle.load(f)
 
-    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    wikidata = wikidata['train']['text'][5000:10000]
 
-    # Make a max scentence size
+    with open('../Data_shared/wiki_subset.txt') as file:
+        data = file.read()
+
+    wikidata = ast.literal_eval(data)
+
+    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    # wikidata = wikidata['train']['text'][5000:10000]
+
+    # Truncate scentences to max_length
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
             for sentence in seq.split(".")]
@@ -129,6 +153,11 @@ def main():
     combined_set = set(wiki_all_text)&set(baroni_set)
     covariance = calculate_covariance(context_dict, combined_set, ft, window)
     baroni_pos_subset, baroni_neg_subset = create_combined_subset(covariance, results_neg_file, results_pos_file, combined_set)
+
+
+    baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
+    baroni_neg_subset = [x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
+
 
     baroni_subset_label = []
 

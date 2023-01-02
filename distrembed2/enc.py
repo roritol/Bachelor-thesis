@@ -132,6 +132,8 @@ def main():
     # with open('../Python_Code/wiki_preprocessed1.pickle', 'rb') as f:
     #     wikidata = pickle.load(f)
 
+    
+
 
     max_length = 40
 
@@ -144,6 +146,9 @@ def main():
     vocab = Vocab()
     vocab.fit(tok.words(wikidata), baroni)
 
+    with open('../data_distrembed/onetenth_vocab.pickle', 'wb') as f:
+        pickle.dump(vocab,f)
+
     print("--------------------------")
     print("--------------------------")
     print("--------------------------")
@@ -151,62 +156,64 @@ def main():
     # with open('../Data/vocab:1000pickle', 'wb') as f:
     #     pickle.dump(vocab,f)
 
-    embavg = EmbedAverages(len(vocab), dim=768)
-    model = DistilBertModel.from_pretrained("distilbert-base-uncased")
-    model.to(device=device)
+    # embavg = EmbedAverages(len(vocab), dim=768)
+    # model = DistilBertModel.from_pretrained("distilbert-base-uncased")
+    # model.to(device=device)
 
-    n_batches = 1 + (len(wikidata[:]) // batch_size)
+    # n_batches = 1 + (len(wikidata[:]) // batch_size)
 
-    # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
-    with torch.no_grad():
-        for k in trange(n_batches):
-            # grab a batch_size chunk from seqs (wiki data)
-            seqb = wikidata[batch_size*k:batch_size*(k+1)]
-            # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
-            words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
-            mbart_input = subw.convert_to_tensors("pt").to(device=device)
-            out = model(**mbart_input, return_dict=True)
-            embs = out['last_hidden_state'].to(device='cpu')
+    # # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
+    # with torch.no_grad():
+    #     for k in trange(n_batches):
+    #         # grab a batch_size chunk from seqs (wiki data)
+    #         seqb = wikidata[batch_size*k:batch_size*(k+1)]
+    #         # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
+    #         words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
+    #         mbart_input = subw.convert_to_tensors("pt").to(device=device)
+    #         out = model(**mbart_input, return_dict=True)
+    #         embs = out['last_hidden_state'].to(device='cpu')
 
-            for b in range(len(seqb)):
-                # accumulate eos token
-                for i, w in enumerate(words[b]):
-                    span = subw.word_to_tokens(b, i)
-                    if span is None:
-                        continue
+    #         for b in range(len(seqb)):
+    #             # accumulate eos token
+    #             for i, w in enumerate(words[b]):
+    #                 span = subw.word_to_tokens(b, i)
+    #                 if span is None:
+    #                     continue
                     
-                    if w not in vocab._tok_to_id:
-                        continue
+    #                 if w not in vocab._tok_to_id:
+    #                     continue
 
-                    vec = embs[b, span.start]
-                    embavg.add(vocab._tok_to_id[w], vec)
+    #                 vec = embs[b, span.start]
+    #                 embavg.add(vocab._tok_to_id[w], vec)
 
-                    if vocab._tok_counts[w] < unk_thresh:
-                        embavg.add(vocab._tok_to_id["<unk>"], vec)
+    #                 if vocab._tok_counts[w] < unk_thresh:
+    #                     embavg.add(vocab._tok_to_id["<unk>"], vec)
 
-                if span is not None:
-                    eos_ix = span.end
-                    embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
+    #             if span is not None:
+    #                 eos_ix = span.end
+    #                 embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
 
-        torch.cuda.empty_cache()
+    #     torch.cuda.empty_cache()
 
     
-    torch.save(embavg, "../data_distrembed/first10.avgs.pt")
-
+    # torch.save(embavg, "../data_distrembed/info.embavg.pt")
+    embavg = torch.load('../data_distrembed/first10.avgs.pt')
     # get f1 scores etc
 
-
+    print("embavg is open")
     baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
     baroni_neg_subset = [x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
 
     baroni_subset_label = []
 
+    print("subsets are made")
     for i in baroni_pos_subset:
         baroni_subset_label.append([i, 1])
 
     for i in baroni_neg_subset:
         baroni_subset_label.append([i, 0])
 
+    
     # MAKE DATAFRAME
     df1 = pd.DataFrame(baroni_subset_label, columns =['Wordpair', 'True label'])
 
