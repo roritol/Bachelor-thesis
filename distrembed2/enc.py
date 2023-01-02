@@ -132,18 +132,17 @@ def main():
     #     wikidata = pickle.load(f)
 
 
-    # import ast
-    # with open('../Data_shared/wiki_subset.txt') as f:
-    #     data = f.read()
-
-    # wikidata = ast.literal_eval(data)
-    
     max_length = 50
 
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
             for sentence in seq.split(".")]
     
+    with open('../Data/wikidata5000_100000_len50.pickle', 'wb') as f:
+        pickle.dump(wikidata,f)
+
+    quit()
+
     tok = Tokenizer()
     vocab = Vocab()
     vocab.fit(tok.words(wikidata), baroni)

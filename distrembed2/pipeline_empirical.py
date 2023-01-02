@@ -1,10 +1,15 @@
 import torch
 from typing import List
 from collections import Counter
-from tqdm import trange
+import tqdm
 import pickle5 as pickle 
-from python_code.utility import import_baroni
+from python_code.utility import import_baroni, cosine_similarity, create_context_dict, text_preprocessing, addDiagonal, create_combined_subset
 
+import fasttext
+import fasttext.util
+import datasets
+
+from sklearn.metrics import average_precision_score
 from transformers import (DistilBertTokenizerFast, DistilBertModel)
 
 class Vocab:
@@ -62,22 +67,38 @@ class Tokenizer:
 
 
 def main():
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
+    max_length = 50
+    batch_size = 400
+    unk_thresh = 10
+
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    seqs = baroni
-    vocab = Vocab()
     tok = Tokenizer()
-    vocab.fit(tok.words(seqs))
-    
-    
+    vocab = Vocab()
+    vocab.fit(tok.words(wikidata), baroni)
     
     ft = fasttext.load_model("../Data/ft_reduced_100.bin")
     
     # open pre processed wiki data
-    with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as f:
-            wiki_all_text = pickle.load(f)
+    # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as f:
+    #         wiki_all_text = pickle.load(f)
+    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    wikidata = wikidata['train']['text'][5000:10000]
+    
+    n_batches = 1 + (len(wikidata[:]) // batch_size)
+
+    with torch.no_grad():
+        for k in trange(n_batches):
+            # grab a batch_size chunk from seqs (wiki data)
+            seqb = wikidata[batch_size*k:batch_size*(k+1)]
+
+
+
+
 
     # creating a context dictionary
     print("create context dict")
