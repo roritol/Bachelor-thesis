@@ -5,6 +5,7 @@ import tqdm
 from tqdm import trange
 import pickle5 as pickle 
 from python_code.utility import import_baroni, cosine_similarity, create_context_dict, text_preprocessing, addDiagonal, create_combined_subset
+import numpy as np
 
 import fasttext
 import fasttext.util
@@ -55,7 +56,23 @@ class Context_dict:
                     if i - w - 1 >= 0:
                         self._context_dict[word].append(all_text[(i - w - 1)])
 
+def calculate_covariance(context_dict, ft, window):
+    covariance = {}
 
+    for word, context in tqdm(context_dict.items()):
+        total = torch.zeros((100,100))
+
+        for c_word in context:
+            # would it be faster to store the matrixes of the words?
+            total += torch.from_numpy(np.outer((ft.get_word_vector(c_word) - 
+                                      ft.get_word_vector(word)), 
+                                      (ft.get_word_vector(c_word) - 
+                                      ft.get_word_vector(word))))
+            
+            cov = (total / (len(context_dict[word]) * window))
+            covariance[word] = .001 * torch.eye(100) + cov
+
+    return covariance
 
 
 def main():
@@ -96,8 +113,10 @@ def main():
         seqb = wikidata[batch_size*k:batch_size*(k+1)]
         Context_dict._update(seqb, window)
 
-    
-    covariance = calculate_covariance(context_dict, combined_set, ft, window)
+    for k in trange(n_batches):
+        # grab a batch_size chunk from seqs (wiki data)
+        seqb = wikidata[batch_size*k:batch_size*(k+1)]
+        covariance = calculate_covariance(Context_dict._context_dict, ft, window)
 
 
 
