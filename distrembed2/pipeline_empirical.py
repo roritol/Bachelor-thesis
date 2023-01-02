@@ -3,36 +3,19 @@ from typing import List
 from collections import Counter
 from tqdm import trange
 import pickle5 as pickle 
+from python_code.utility import import_baroni
 
 from transformers import (DistilBertTokenizerFast, DistilBertModel)
 
-def import_baroni(neg_file, pos_file):
-    filenames = ["neg_file", "pos_file"]
-
-    for i, file in enumerate([neg_file, pos_file]):
-        globals()['results_{}'.format(filenames[i])] = []
-        
-        with open(file) as f:
-            line = f.readline()
-            while line:
-                globals()['results_{}'.format(filenames[i])].append(line.replace("-n", "").replace("\n", "").strip("").split("\t"))
-                line = f.readline()
-        f.close()
-
-    baroni = sum(results_neg_file, []) + sum(results_pos_file, [])
-    baroni_set = set(baroni)
-
-    return results_neg_file, results_pos_file, baroni, baroni_set
-
-    
 class Vocab:
 
     def __init__(self):
         self._tok_counts = Counter()
+        self._id_to_tok = {}
 
-    def fit(self, data):
-        for sequence in data:
-            self._tok_counts.update(sequence)
+    def fit(self, data, word_list):
+        for sequence in tqdm(data):
+            self._tok_counts.update([tok for tok in sequence if tok in word_list])
 
         self._toks = (["</s>", "<unk>"] +
                       [tok for tok, _ in self._tok_counts.most_common()])
@@ -43,27 +26,25 @@ class Vocab:
 
 
 class EmbedAverages(torch.nn.Module):
-
     def __init__(self, n_words, dim):
-
         super().__init__()
         # matrix of wordvector sums
         self.register_buffer("_sum", torch.zeros(n_words, dim))
-        self.register_buffer("_ssq", torch.zeros(n_words, dim))
-        self.register_buffer("_sum_normed", torch.zeros(n_words, dim))
         self.register_buffer("_counts", torch.zeros(n_words, dtype=torch.long))
-
+        self.register_buffer("_cov", torch.zeros(n_words, dim, dim))
+    
     def add(self, ix, vec):
-        # could use B.index_add(0, ix, torch.ones_like(ix, dtype=torch.float)
         self._counts[ix] += 1
         self._sum[ix] += vec
-        self._ssq[ix] += vec ** 2
-        # self._sum_normed[ix] += vec / torch.norm(vec, dim=-1, keepdim=True)
+        self._cov[ix] += vec.reshape([len(vec), 1]) @ vec.reshape([1, len(vec)])
+    
+    def get_mean_covariance(self, ix):
+        mean = self._sum[ix] / self._counts[ix]
+        d = len(mean)
+        cov = self._cov[ix] / self._counts[ix] - mean.reshape([d, 1])  @ mean.reshape([1, d])
+        cov = .001 * torch.eye(d) + cov
+        return mean, cov
 
-# after you made the lookup tabel you have to take the row vector from sum matrix 
-# corrsponding to the taget word and devide it by the count 
-
-# vocab wil give index of target word 
 
 class Tokenizer:
 
@@ -84,30 +65,56 @@ def main():
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
-
-    # Load the "embavg" file saved at the end of the script
-    embavg = torch.load('../data_distrembed/roen.avgs.pt')
-
+    
     seqs = baroni
     vocab = Vocab()
     tok = Tokenizer()
     vocab.fit(tok.words(seqs))
-
-    # Create a dictionary that maps words to their vector representations
-    word_vectors = {}
-
-    # Iterate over the words in the vocabulary
-    for key, id in vocab._tok_to_id.items():
-        # Get the average vector for the current word
-        vec = embavg._sum[id]
-        count = embavg._counts[id]
-        # Add an entry to the dictionary that maps the current word to its average vector
-        word_vectors[key] = vec.numpy() / count.numpy()
     
-    print(word_vectors)
-    # with open('covariance_BERT.pickle', 'wb') as handle:
-    #     pickle.dump(word_vectors, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    
+    ft = fasttext.load_model("../Data/ft_reduced_100.bin")
+    
+    # open pre processed wiki data
+    with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as f:
+            wiki_all_text = pickle.load(f)
 
+    # creating a context dictionary
+    print("create context dict")
+    window = 5
+    context_dict = create_context_dict(wiki_all_text, window)
+    combined_set = set(wiki_all_text)&set(baroni_set)
+    covariance = calculate_covariance(context_dict, combined_set, ft, window)
+    baroni_pos_subset, baroni_neg_subset = create_combined_subset(covariance, results_neg_file, results_pos_file, combined_set)
+
+    baroni_subset_label = []
+
+    for i in baroni_pos_subset:
+        baroni_subset_label.append([i, 1])
+
+    for i in baroni_neg_subset:
+        baroni_subset_label.append([i, 0])
+
+    # MAKE DATAFRAME
+    df1 = pd.DataFrame(baroni_subset_label, columns =['Wordpair', 'True label'])
+
+    # CALCULATE KL and COS
+    baroni_subset_kl = []
+    baroni_subset_cos = []
+
+    for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
+        baroni_subset_kl.append(calculate_kl(covariance, ft, wordpair))
+        baroni_subset_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
+                                                   ft.get_word_vector(wordpair[1])))
+       
+    df1['KL score'] = baroni_subset_kl
+    df1['COS score'] = baroni_subset_cos
+
+    with open('df1.pickle', 'wb') as handle:
+        pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    print("COS AP: ", average_precision_score(df1["True label"], df1["COS score"]))
+    print("KL AP: ", average_precision_score(df1["True label"], df1["KL score"]))
 
 if __name__ == '__main__':
     main()

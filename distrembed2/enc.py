@@ -116,7 +116,7 @@ def main():
     
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    batch_size = 500
+    batch_size = 400
     unk_thresh = 10
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
@@ -191,6 +191,8 @@ def main():
                 if span is not None:
                     eos_ix = span.end
                     embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
+
+        torch.cuda.empty_cache()
 
     
     torch.save(embavg, "../data_distrembed/first10.avgs.pt")

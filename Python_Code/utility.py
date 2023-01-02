@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from numpy.linalg import norm
 from scipy.spatial import distance
+import torch
 
 def import_baroni(neg_file, pos_file):
     filenames = ["neg_file", "pos_file"]
@@ -57,7 +58,6 @@ def text_preprocessing(
 
     return text
 
-
 def create_context_dict(all_text, window = 1):
 
     # Creating a dictionary entry for each word in the texts
@@ -74,7 +74,6 @@ def create_context_dict(all_text, window = 1):
                 context_dict[word].append(all_text[(i - w - 1)])
 
     return context_dict
-
 
 def cosine_similarity(a, b):
     nominator = np.dot(a, b)
@@ -113,3 +112,20 @@ def create_combined_subset(context_dict, results_neg_file, results_pos_file, com
     baroni_neg_subset = [x for x in results_neg_file if x[0] in combined_set_30plus and x[1] in combined_set_30plus]
 
     return baroni_pos_subset, baroni_neg_subset
+
+
+def calculate_kl(covariance, ft, wordpair):
+    mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
+    covariance_matrix1 = torch.from_numpy(covariance[wordpair[0]])
+    covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
+    mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
+    covariance_matrix2 = torch.from_numpy(covariance[wordpair[1]])
+    covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
+
+    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+
+    return float(torch.distributions.kl.kl_divergence(p, q))
+    
+
+    
