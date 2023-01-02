@@ -124,7 +124,7 @@ def main():
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    wikidata = wikidata['train']['text'][5000:100000]
+    wikidata = wikidata['train']['text'][5000:-1]
     
     # print("open pickeled data:")
 

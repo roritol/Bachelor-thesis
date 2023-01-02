@@ -4,6 +4,7 @@ from tqdm import tqdm
 from numpy.linalg import norm
 from scipy.spatial import distance
 import torch
+from collections import Counter
 
 def import_baroni(neg_file, pos_file):
     filenames = ["neg_file", "pos_file"]
@@ -58,22 +59,23 @@ def text_preprocessing(
 
     return text
 
-def create_context_dict(all_text, window = 1):
+# def create_context_dict(all_text, window = 1):
 
-    # Creating a dictionary entry for each word in the texts
-    context_dict = { i : list() for i in set(all_text)}
+#     # Creating a dictionary entry for each word in the texts
+#     context_dict = { i : list() for i in set(all_text)}
 
 
-    for i, word in tqdm(enumerate(all_text)):
-        for w in range(window):
-            # Getting the context that is ahead by *window* words
-            if i + 1 + w < len(all_text):
-                context_dict[word].append(all_text[(i + 1 + w)]) 
-            # Getting the context that is behind by *window* words    
-            if i - w - 1 >= 0:
-                context_dict[word].append(all_text[(i - w - 1)])
+#     for i, word in tqdm(enumerate(all_text)):
+#         for w in range(window):
+#             # Getting the context that is ahead by *window* words
+#             if i + 1 + w < len(all_text):
+#                 context_dict[word].append(all_text[(i + 1 + w)]) 
+#             # Getting the context that is behind by *window* words    
+#             if i - w - 1 >= 0:
+#                 context_dict[word].append(all_text[(i - w - 1)])
 
-    return context_dict
+#     return context_dict
+
 
 def cosine_similarity(a, b):
     nominator = np.dot(a, b)
@@ -126,6 +128,6 @@ def calculate_kl(covariance, ft, wordpair):
     q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
 
     return float(torch.distributions.kl.kl_divergence(p, q))
-    
+
 
     

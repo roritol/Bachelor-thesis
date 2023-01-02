@@ -2,6 +2,7 @@ import torch
 from typing import List
 from collections import Counter
 import tqdm
+from tqdm import trange
 import pickle5 as pickle 
 from python_code.utility import import_baroni, cosine_similarity, create_context_dict, text_preprocessing, addDiagonal, create_combined_subset
 
@@ -12,49 +13,12 @@ import datasets
 from sklearn.metrics import average_precision_score
 from transformers import (DistilBertTokenizerFast, DistilBertModel)
 
-class Vocab:
-
-    def __init__(self):
-        self._tok_counts = Counter()
-        self._id_to_tok = {}
-
-    def fit(self, data, word_list):
-        for sequence in tqdm(data):
-            self._tok_counts.update([tok for tok in sequence if tok in word_list])
-
-        self._toks = (["</s>", "<unk>"] +
-                      [tok for tok, _ in self._tok_counts.most_common()])
-        self._tok_to_id = {tok: i for i, tok in enumerate(self._toks)}
-
-    def __len__(self):
-        return len(self._toks)
-
-
-class EmbedAverages(torch.nn.Module):
-    def __init__(self, n_words, dim):
-        super().__init__()
-        # matrix of wordvector sums
-        self.register_buffer("_sum", torch.zeros(n_words, dim))
-        self.register_buffer("_counts", torch.zeros(n_words, dtype=torch.long))
-        self.register_buffer("_cov", torch.zeros(n_words, dim, dim))
-    
-    def add(self, ix, vec):
-        self._counts[ix] += 1
-        self._sum[ix] += vec
-        self._cov[ix] += vec.reshape([len(vec), 1]) @ vec.reshape([1, len(vec)])
-    
-    def get_mean_covariance(self, ix):
-        mean = self._sum[ix] / self._counts[ix]
-        d = len(mean)
-        cov = self._cov[ix] / self._counts[ix] - mean.reshape([d, 1])  @ mean.reshape([1, d])
-        cov = .001 * torch.eye(d) + cov
-        return mean, cov
-
 
 class Tokenizer:
 
     def __init__(self):
         self._t = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
+    
     def words(self, sequences: List[str]):
         return [s.split() for s in sequences]
 
@@ -66,19 +30,48 @@ class Tokenizer:
         return words, subw
 
 
+class Context_dict:
+
+    def __init__(self):
+        self._tok_counts = Counter()
+        self._context_dict = {}
+        
+    
+    def fit(self, words_of_interest):
+        self._context_dict = {i : list() for i in set(words_of_interest)}
+
+         # Creating a dictionary entry for each word in the texts
+
+    def _update(self, all_text, words_of_interest, window = 1):
+
+        for i, word in tqdm(enumerate(all_text)):
+            # Only update the context dict for words of interest
+            if word in words_of_interest:
+                for w in range(window):
+                    # Getting the context that is ahead by *window* words
+                    if i + 1 + w < len(all_text):
+                        self._context_dict[word].append(all_text[(i + 1 + w)]) 
+                    # Getting the context that is behind by *window* words    
+                    if i - w - 1 >= 0:
+                        self._context_dict[word].append(all_text[(i - w - 1)])
+
+
+
+
 def main():
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     max_length = 50
     batch_size = 400
     unk_thresh = 10
+    window = 5
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
     tok = Tokenizer()
-    vocab = Vocab()
+    vocab = Context_dict()
     vocab.fit(tok.words(wikidata), baroni)
     
     ft = fasttext.load_model("../Data/ft_reduced_100.bin")
@@ -86,15 +79,25 @@ def main():
     # open pre processed wiki data
     # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as f:
     #         wiki_all_text = pickle.load(f)
+
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     wikidata = wikidata['train']['text'][5000:10000]
-    
-    n_batches = 1 + (len(wikidata[:]) // batch_size)
 
-    with torch.no_grad():
-        for k in trange(n_batches):
-            # grab a batch_size chunk from seqs (wiki data)
-            seqb = wikidata[batch_size*k:batch_size*(k+1)]
+    # Make a max scentence size
+    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+            for seq in tqdm(wikidata)
+            for sentence in seq.split(".")]
+    
+    # Calculate number of batches 
+    n_batches = 1 + (len(wikidata[:]) // batch_size)
+    
+    for k in trange(n_batches):
+        # grab a batch_size chunk from seqs (wiki data)
+        seqb = wikidata[batch_size*k:batch_size*(k+1)]
+        Context_dict._update(seqb, window)
+
+    
+    covariance = calculate_covariance(context_dict, combined_set, ft, window)
 
 
 
