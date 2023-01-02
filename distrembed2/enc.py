@@ -37,7 +37,7 @@ class Vocab:
         self._id_to_tok = {}
 
     def fit(self, data, word_list):
-        for sequence in data:
+        for sequence in tqdm(data):
             self._tok_counts.update([tok for tok in sequence if tok in word_list])
 
         self._toks = (["</s>", "<unk>"] +
