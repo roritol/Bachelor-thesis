@@ -136,7 +136,7 @@ def main():
 
 
     max_length = 40
-
+    print("truncating the scentences")
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
             for sentence in seq.split(".")]
@@ -144,6 +144,7 @@ def main():
 
     tok = Tokenizer()
     vocab = Vocab()
+    print("fitting the vocab")
     vocab.fit(tok.words(wikidata), baroni)
 
     with open('../data_distrembed/onetenth_vocab.pickle', 'wb') as f:
@@ -195,7 +196,7 @@ def main():
 
     #     torch.cuda.empty_cache()
 
-    
+    print("open the embavg file")
     # torch.save(embavg, "../data_distrembed/info.embavg.pt")
     embavg = torch.load('../data_distrembed/first10.avgs.pt')
     # get f1 scores etc
