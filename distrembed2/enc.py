@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 from sklearn.metrics import average_precision_score
 
-
+import sys
 
 from transformers import (DistilBertTokenizerFast, DistilBertModel)
 
@@ -144,23 +144,32 @@ def main():
     
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
+    print('cmd entry:', sys.argv)
+    is_diagonal = eval(sys.argv[0])
+    # assert isinstance(is_diagonal, bool)
+    # raise TypeError('param should be a bool')
+
     batch_size = 200
-    unk_thresh = 10
+    unk_thresh = 2
+    max_length = 40
+    # set the slice of the wikidata
+    begin = 50000
+    end = 75000
+
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    # end = 6073421/100
-    wikidata = wikidata['train']['text'][50000:75000]
+    wikidata = wikidata['train']['text'][int(begin):int(end)]
     
     # print("open pickeled data:")
 
     # with open('../Python_Code/wiki_preprocessed1.pickle', 'rb') as f:
     #     wikidata = pickle.load(f)
 
-    max_length = 40
+    
     print("truncating the scentences")
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
@@ -246,10 +255,17 @@ def main():
     baroni_subset_kl = []
     baroni_subset_cos = []
     print("CALCULATE KL and COS")
-    for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
-        baroni_subset_kl.append(calculate_kl(wordpair, embavg, vocab))
-        baroni_subset_cos.append(cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
-                                                embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
+
+    if is_diagonal:
+        for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
+            baroni_subset_kl.append(calculate_diag_kl(wordpair, embavg, vocab))
+            baroni_subset_cos.append(diag_cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
+                                                    embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
+    else:
+        for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
+            baroni_subset_kl.append(calculate_kl(wordpair, embavg, vocab))
+            baroni_subset_cos.append(cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
+                                                    embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
 
     df1['KL score'] = baroni_subset_kl
     df1['COS score'] = baroni_subset_cos
@@ -258,9 +274,16 @@ def main():
     #     pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print(df1)
-    print("COS AP: ", average_precision_score(df1["True label"], df1["COS score"]))
-    print("KL AP: ", average_precision_score(df1["True label"], -df1["KL score"]))
+    print("COS AP               : ", average_precision_score(df1["True label"], df1["COS score"]))
+    print("KL AP                : ", average_precision_score(df1["True label"], -df1["KL score"]))
+    print("batch size           : ", batch_size)
+    print("unkown threshold     : ", unk_thresh)
+    print("Max scentence length : ", max_length)
+    print(f"Wiki articles from  : {begin} to: {end}")
+    print("total scentences     : ", len(wikidata))
+    print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
+
+
 
 if __name__ == '__main__':
     main()
-
