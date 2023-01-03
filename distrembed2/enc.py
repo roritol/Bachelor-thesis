@@ -247,8 +247,8 @@ def main():
     baroni_subset_cos = []
     print("CALCULATE KL and COS")
     for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
-        baroni_subset_kl.append(calculate_diag_kl(wordpair, embavg, vocab))
-        baroni_subset_cos.append(diag_cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
+        baroni_subset_kl.append(calculate_kl(wordpair, embavg, vocab))
+        baroni_subset_cos.append(cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
                                                 embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
 
     df1['KL score'] = baroni_subset_kl
