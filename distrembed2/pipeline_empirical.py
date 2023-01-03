@@ -4,7 +4,7 @@ from collections import Counter
 import tqdm
 from tqdm import trange
 import pickle5 as pickle 
-from python_code.utility import import_baroni, cosine_similarity, create_context_dict, text_preprocessing, addDiagonal, create_combined_subset
+# from python_code.utility import import_baroni, cosine_similarity, addDiagonal
 import numpy as np
 import ast
 import pandas as pd
@@ -16,6 +16,23 @@ import datasets
 from sklearn.metrics import average_precision_score
 from transformers import (DistilBertTokenizerFast, DistilBertModel)
 
+def import_baroni(neg_file, pos_file):
+    filenames = ["neg_file", "pos_file"]
+
+    for i, file in enumerate([neg_file, pos_file]):
+        globals()['results_{}'.format(filenames[i])] = []
+        
+        with open(file) as f:
+            line = f.readline()
+            while line:
+                globals()['results_{}'.format(filenames[i])].append(line.replace("-n", "").replace("\n", "").strip("").split("\t"))
+                line = f.readline()
+        f.close()
+
+    baroni = sum(results_neg_file, []) + sum(results_pos_file, [])
+    baroni_set = set(baroni)
+
+    return results_neg_file, results_pos_file, baroni, baroni_set
 
 class Tokenizer:
 
@@ -105,6 +122,12 @@ def main():
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
+    with open('../Data_shared/wiki_subset.txt') as file:
+        data = file.read()
+
+    wikidata = ast.literal_eval(data)
+
+
     tok = Tokenizer()
     vocab = Context_dict()
     vocab.fit(tok.words(wikidata), baroni)
@@ -116,11 +139,7 @@ def main():
     #         wiki_all_text = pickle.load(f)
 
 
-    with open('../Data_shared/wiki_subset.txt') as file:
-        data = file.read()
-
-    wikidata = ast.literal_eval(data)
-
+    
     # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # wikidata = wikidata['train']['text'][5000:10000]
 
@@ -141,18 +160,6 @@ def main():
         # grab a batch_size chunk from seqs (wiki data)
         seqb = wikidata[batch_size*k:batch_size*(k+1)]
         covariance = calculate_covariance(Context_dict._context_dict, ft, window)
-
-
-
-
-
-    # creating a context dictionary
-    print("create context dict")
-    window = 5
-    context_dict = create_context_dict(wiki_all_text, window)
-    combined_set = set(wiki_all_text)&set(baroni_set)
-    covariance = calculate_covariance(context_dict, combined_set, ft, window)
-    baroni_pos_subset, baroni_neg_subset = create_combined_subset(covariance, results_neg_file, results_pos_file, combined_set)
 
 
     baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
