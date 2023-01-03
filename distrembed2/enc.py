@@ -104,8 +104,8 @@ def calculate_diag_kl(wordpair, embavg, vocab):
     mean2, covariance_matrix2 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[1])) 
     
     # Create PyTorch multivariate normal distributions using the mean vectors and covariance matrices
-    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagonal(covariance_matrix1))
-    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagonal(covariance_matrix2))
+    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.eye(torch.diagonal(covariance_matrix1)))
+    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.eye(torch.diagonal(covariance_matrix2)))
 
     # Calculate the KL divergence between the two distributions
     kl = torch.distributions.kl.kl_divergence(p, q)
@@ -148,7 +148,7 @@ def main():
     # is_diagonal = eval(sys.argv[0])
     # # assert isinstance(is_diagonal, bool)
     # # raise TypeError('param should be a bool')
-    is_diagonal = False
+    is_diagonal = True
     batch_size = 200
     unk_thresh = 2
     max_length = 40
@@ -220,12 +220,12 @@ def main():
                     vec = embs[b, span.start]
                     embavg.add(vocab._tok_to_id[w], vec)
 
-                    if vocab._tok_counts[w] < unk_thresh:
-                        embavg.add(vocab._tok_to_id["<unk>"], vec)
+                #     if vocab._tok_counts[w] < unk_thresh:
+                #         embavg.add(vocab._tok_to_id["<unk>"], vec)
 
-                if span is not None:
-                    eos_ix = span.end
-                    embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
+                # if span is not None:
+                #     eos_ix = span.end
+                #     embavg.add(vocab._tok_to_id["</s>"], embs[b, eos_ix])
 
         torch.cuda.empty_cache()
 
