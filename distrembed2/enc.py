@@ -105,8 +105,8 @@ def calculate_diag_kl(wordpair, embavg, vocab):
     mean2, covariance_matrix2 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[1])) 
     n = int(100)
     # Create PyTorch multivariate normal distributions using the mean vectors and covariance matrices
-    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.eye(n, torch.diagonal(covariance_matrix1)))
-    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.eye(n, torch.diagonal(covariance_matrix2)))
+    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
+    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
 
     # Calculate the KL divergence between the two distributions
     kl = torch.distributions.kl.kl_divergence(p, q)
@@ -127,8 +127,8 @@ def cosine_similarity(a, b):
     return cosine_similarity
 
 def diag_cosine_similarity(a, b):
-    a = torch.diagonal(a)
-    b = torch.diagonal(b)
+    a = torch.diagflat(torch.diag(a))
+    b = torch.diagflat(torch.diag(b))
     nominator = torch.dot(a, b)
     
     a_norm = torch.sqrt(torch.sum(a**2))
