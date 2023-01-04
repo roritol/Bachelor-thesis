@@ -115,7 +115,7 @@ def calculate_diag_kl(wordpair, embavg, vocab):
 
 
 def cosine_similarity(a, b):
-    nominator = torch.dot(a, b)
+    nominator = torch.mm(a, b)
     
     a_norm = torch.sqrt(torch.sum(a**2))
     b_norm = torch.sqrt(torch.sum(b**2))
@@ -127,9 +127,9 @@ def cosine_similarity(a, b):
     return cosine_similarity
 
 def diag_cosine_similarity(a, b):
-    a = torch.diagflat(torch.diag(a))
-    b = torch.diagflat(torch.diag(b))
-    nominator = torch.dot(a, b)
+    a = torch.diag_embed(torch.diagonal(a))
+    b = torch.diag_embed(torch.diagonal(b))
+    nominator = torch.mm(a, b)
     
     a_norm = torch.sqrt(torch.sum(a**2))
     b_norm = torch.sqrt(torch.sum(b**2))
@@ -155,7 +155,7 @@ def main():
     max_length = 40
     # set the slice of the wikidata
     begin = 50000
-    end = 55000
+    end = 51000
 
 
     neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
@@ -164,13 +164,14 @@ def main():
     
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     wikidata = wikidata['train']['text'][int(begin):int(end)]
-    
+
     # print("open pickeled data:")
 
     # with open('../Python_Code/wiki_preprocessed1.pickle', 'rb') as f:
     #     wikidata = pickle.load(f)
-
     
+
+
     print("truncating the scentences")
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)

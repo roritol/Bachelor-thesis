@@ -1,8 +1,9 @@
 import torch
 from typing import List
 from collections import Counter
-import tqdm
+
 from tqdm import trange
+from tqdm import tqdm
 import pickle5 as pickle 
 # from python_code.utility import import_baroni, cosine_similarity, addDiagonal
 import numpy as np
@@ -34,6 +35,14 @@ def import_baroni(neg_file, pos_file):
 
     return results_neg_file, results_pos_file, baroni, baroni_set
 
+def addDiagonal(matrix, x):
+    assert x < 1, f"x greater than 0 expected, got: {x}"
+    
+    for i in range(len(matrix)):
+        matrix[i][i] = matrix[i][i] + x
+    
+    return matrix
+
 class Tokenizer:
 
     def __init__(self):
@@ -61,7 +70,7 @@ class Context_dict:
         self._context_dict = {i : list() for i in set(words_of_interest)}
         
         for sequence in tqdm(data):
-            self._tok_counts.update([tok for tok in sequence if tok in word_list])
+            self._tok_counts.update([tok for tok in sequence if tok in words_of_interest])
 
          # Creating a dictionary entry for each word in the texts
 
@@ -118,15 +127,21 @@ def main():
     # unk_thresh = 10
     window = 5
 
-    neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
-    pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
+    neg_file = "../data_shared/eacl2012-data/negative-examples.txtinput"
+    pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    with open('../Data_shared/wiki_subset.txt') as file:
+    with open('../data_shared/wiki_subset.txt') as file:
         data = file.read()
 
     wikidata = ast.literal_eval(data)
+    wikidata = wikidata["text"]   
 
+
+    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+            for seq in tqdm(wikidata)
+            for sentence in seq.split(".")]
+    
 
     tok = Tokenizer()
     vocab = Context_dict()
@@ -134,19 +149,16 @@ def main():
     
     ft = fasttext.load_model("../Data/ft_reduced_100.bin")
     
+
     # open pre processed wiki data
     # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as f:
     #         wiki_all_text = pickle.load(f)
-
-
     
     # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # wikidata = wikidata['train']['text'][5000:10000]
 
     # Truncate scentences to max_length
-    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in tqdm(wikidata)
-            for sentence in seq.split(".")]
+    
     
     # Calculate number of batches 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
@@ -154,7 +166,7 @@ def main():
     for k in trange(n_batches):
         # grab a batch_size chunk from seqs (wiki data)
         seqb = wikidata[batch_size*k:batch_size*(k+1)]
-        Context_dict._update(seqb, window)
+        Context_dict._update(seqb, window, baroni)
 
     for k in trange(n_batches):
         # grab a batch_size chunk from seqs (wiki data)
