@@ -129,7 +129,7 @@ def cosine_similarity(a, b):
 def diag_cosine_similarity(a, b):
     a = torch.diagonal(a)
     b = torch.diagonal(b)
-    nominator = torch.mm(a, b)
+    nominator = torch.dot(a, b)
     
     a_norm = torch.sqrt(torch.sum(a**2))
     b_norm = torch.sqrt(torch.sum(b**2))
