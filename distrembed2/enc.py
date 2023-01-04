@@ -127,8 +127,8 @@ def cosine_similarity(a, b):
     return cosine_similarity
 
 def diag_cosine_similarity(a, b):
-    a = torch.diag_embed(torch.diagonal(a))
-    b = torch.diag_embed(torch.diagonal(b))
+    a = torch.diagonal(a)
+    b = torch.diagonal(b)
     nominator = torch.mm(a, b)
     
     a_norm = torch.sqrt(torch.sum(a**2))
@@ -149,7 +149,7 @@ def main():
     # is_diagonal = eval(sys.argv[0])
     # # assert isinstance(is_diagonal, bool)
     # # raise TypeError('param should be a bool')
-    is_diagonal = False
+    is_diagonal = True
     batch_size = 200
     unk_thresh = 2
     max_length = 40
