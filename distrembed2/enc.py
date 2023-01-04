@@ -149,7 +149,7 @@ def main():
     # is_diagonal = eval(sys.argv[0])
     # # assert isinstance(is_diagonal, bool)
     # # raise TypeError('param should be a bool')
-    is_diagonal = True
+    is_diagonal = False
     batch_size = 200
     unk_thresh = 2
     max_length = 40
