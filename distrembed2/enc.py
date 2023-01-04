@@ -126,30 +126,12 @@ def cosine_similarity(a, b):
     
     return cosine_similarity
 
-def diag_cosine_similarity(a, b):
-    a = torch.diag(a)
-    b = torch.diag(b)
-    nominator = torch.dot(a, b)
-    
-    a_norm = torch.sqrt(torch.sum(a**2))
-    b_norm = torch.sqrt(torch.sum(b**2))
-    
-    denominator = a_norm * b_norm
-    
-    cosine_similarity = nominator / denominator
-    
-    return cosine_similarity
-
 
 def main():
     
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    # print('cmd entry:', sys.argv)
-    # is_diagonal = eval(sys.argv[0])
-    # # assert isinstance(is_diagonal, bool)
-    # # raise TypeError('param should be a bool')
-    is_diagonal = True
+    is_diagonal = sys.argv[1]
     batch_size = 200
     unk_thresh = 2
     max_length = 40
@@ -264,7 +246,7 @@ def main():
             print(embavg._sum[vocab._tok_to_id.get(wordpair[1])])
             print(torch.diag(embavg._sum[vocab._tok_to_id.get(wordpair[0])]))
             baroni_subset_kl.append(calculate_diag_kl(wordpair, embavg, vocab))
-            baroni_subset_cos.append(diag_cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
+            baroni_subset_cos.append(cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
                                                     embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
     else:
         for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
