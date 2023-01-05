@@ -52,7 +52,7 @@ def main ():
         
         words = sentence.split()
         for word in words:
-            if word in baroni_set and sentence_counter[word] < max_length:
+            if word in baroni_set and sentence_counter[word] < 100:
                 
                     collected_sentences.append(sentence)
                     sentence_counter[word] += 1
