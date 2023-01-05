@@ -34,7 +34,8 @@ def main ():
     end = 100000
 
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    wikidata = wikidata['train']['text'][int(begin):int(end)]
+    # wikidata = wikidata['train']['text'][int(begin):int(end)]
+    wikidata = wikidata['train']['text']
 
     print("truncating the scentences")
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
