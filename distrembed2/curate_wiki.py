@@ -56,7 +56,7 @@ def main ():
                     collected_sentences.append(sentence)
                     sentence_counter[word] += 1
 
-    with open('../data/curated50000.pickle', 'wb') as handle:
+    with open('../data_distrembed/curated50000.pickle', 'wb') as handle:
         pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("collected_sentences    :" , collected_sentences[:10])
