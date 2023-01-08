@@ -148,7 +148,7 @@ def main():
     # wikidata = wikidata['train']['text'][int(begin):int(end)]
 
     # print("open pickeled data:")
-    with open('../data_distrembed/curated50000.pickle', 'wb') as f:
+    with open('../data_distrembed/curated50000.pickle', 'rb') as f:
         wikidata = pickle.load(f)
 
 

@@ -168,7 +168,7 @@ def main():
     for k in trange(n_batches):
         # grab a batch_size chunk from seqs (wiki data)
         seqb = wikidata[batch_size*k:batch_size*(k+1)]
-        Context_dict._update(seqb, window, baroni)
+        Context_dict._update(seqb, baroni, window )
 
     for k in trange(n_batches):
         # grab a batch_size chunk from seqs (wiki data)
