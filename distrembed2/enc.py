@@ -144,20 +144,18 @@ def main():
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    wikidata = wikidata['train']['text'][int(begin):int(end)]
+    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    # wikidata = wikidata['train']['text'][int(begin):int(end)]
 
     # print("open pickeled data:")
-
-    # with open('../Python_Code/wiki_preprocessed1.pickle', 'rb') as f:
-    #     wikidata = pickle.load(f)
-    
+    with open('../data_distrembed/curated50000.pickle', 'wb') as f:
+        wikidata = pickle.load(f)
 
 
     print("truncating the scentences")
-    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in tqdm(wikidata)
-            for sentence in seq.split(".")]
+    # wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+    #         for seq in tqdm(wikidata)
+    #         for sentence in seq.split(".")]
 
     tok = Tokenizer()
     vocab = Vocab()

@@ -142,6 +142,8 @@ def main():
             for seq in tqdm(wikidata)
             for sentence in seq.split(".")]
     
+    # with open('../data_distrembed/curated50000.pickle', 'wb') as f:
+    #     wikidata = pickle.load(f)
 
     tok = Tokenizer()
     vocab = Context_dict()
