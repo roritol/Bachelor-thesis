@@ -132,6 +132,7 @@ def main():
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     is_diagonal = sys.argv[1]
+    save_vocab = False
     batch_size = 200
     unk_thresh = 2
     max_length = 40
@@ -162,15 +163,9 @@ def main():
     print("fitting the vocab")
     vocab.fit(tok.words(wikidata), baroni)
 
-    with open('../data_distrembed/onetenth_vocab.pickle', 'wb') as f:
-        pickle.dump(vocab,f)
-
-    print("--------------------------")
-    print("--------------------------")
-    print("--------------------------")
-
-    with open('../Data/vocab:1000pickle', 'wb') as f:
-        pickle.dump(vocab,f)
+    if save_vocab:
+        with open('../data_distrembed/onetenth_vocab.pickle', 'wb') as f:
+            pickle.dump(vocab,f)
 
     embavg = EmbedAverages(len(vocab), dim=768)
     model = DistilBertModel.from_pretrained("distilbert-base-uncased")
@@ -256,6 +251,7 @@ def main():
     #     pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print(df1)
+    print("Diagonal             : ", is_diagonal)
     print("COS AP               : ", average_precision_score(df1["True label"], df1["COS score"]))
     print("KL AP                : ", average_precision_score(df1["True label"], -df1["KL score"]))
     print("batch size           : ", batch_size)

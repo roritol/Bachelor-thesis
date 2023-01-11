@@ -35,6 +35,18 @@ def import_baroni(neg_file, pos_file):
 
     return results_neg_file, results_pos_file, baroni, baroni_set
 
+def cosine_similarity(a, b):
+    nominator = np.dot(a, b)
+    
+    a_norm = np.sqrt(np.sum(a**2))
+    b_norm = np.sqrt(np.sum(b**2))
+    
+    denominator = a_norm * b_norm
+    
+    cosine_similarity = nominator / denominator
+    
+    return cosine_similarity
+
 def addDiagonal(matrix, x):
     assert x < 1, f"x greater than 0 expected, got: {x}"
     
@@ -74,8 +86,7 @@ class Context_dict:
 
          # Creating a dictionary entry for each word in the texts
 
-    def _update(self, all_text, words_of_interest, window = 1):
-
+    def _update(self, all_text, words_of_interest, window):
         for i, word in tqdm(enumerate(all_text)):
             # Only update the context dict for words of interest
             if word in words_of_interest:
@@ -108,10 +119,10 @@ def calculate_covariance(context_dict, ft, window):
 
 def calculate_kl(covariance, ft, wordpair):
     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
-    covariance_matrix1 = torch.from_numpy(covariance[wordpair[0]])
+    covariance_matrix1 = covariance[wordpair[0]]
     covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
     mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
-    covariance_matrix2 = torch.from_numpy(covariance[wordpair[1]])
+    covariance_matrix2 = covariance[wordpair[1]]
     covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
 
     p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
@@ -121,7 +132,6 @@ def calculate_kl(covariance, ft, wordpair):
 
 
 def main():
-
     max_length = 50
     batch_size = 400
     # unk_thresh = 10
@@ -131,36 +141,24 @@ def main():
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    with open('../data_shared/wiki_subset.txt') as file:
-        data = file.read()
+    # with open('../data_shared/wiki_subset.txt') as file:
+    #     data = file.read()
 
-    wikidata = ast.literal_eval(data)
-    wikidata = wikidata["text"]   
+    # wikidata = ast.literal_eval(data)
+    # wikidata = wikidata["text"][:100]   
 
+    # wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+    #         for seq in tqdm(wikidata)
+    #         for sentence in seq.split(".")]
 
-    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in tqdm(wikidata)
-            for sentence in seq.split(".")]
-    
-    # with open('../data_distrembed/curated50000.pickle', 'wb') as f:
-    #     wikidata = pickle.load(f)
+    with open('../data_distrembed/curated50000.pickle', 'rb') as f:
+        wikidata = pickle.load(f)
 
     tok = Tokenizer()
     vocab = Context_dict()
-    vocab.fit(tok.words(wikidata), baroni)
+    vocab.fit(tok.words(wikidata), baroni_set)
     
     ft = fasttext.load_model("../Data/ft_reduced_100.bin")
-    
-
-    # open pre processed wiki data
-    # with open('../Data_Shared/wiki_subtext_preprocess.pickle', 'rb') as f:
-    #         wiki_all_text = pickle.load(f)
-    
-    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    # wikidata = wikidata['train']['text'][5000:10000]
-
-    # Truncate scentences to max_length
-    
     
     # Calculate number of batches 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
@@ -168,12 +166,12 @@ def main():
     for k in trange(n_batches):
         # grab a batch_size chunk from seqs (wiki data)
         seqb = wikidata[batch_size*k:batch_size*(k+1)]
-        Context_dict._update(tok.words(seqb), baroni, window)
+        words, subwords = tok(seqb)
+        all_text = [word for sentence in words for word in sentence]
+        vocab._update(all_text, baroni_set, window)
 
-    for k in trange(n_batches):
-        # grab a batch_size chunk from seqs (wiki data)
-        seqb = wikidata[batch_size*k:batch_size*(k+1)]
-        covariance = calculate_covariance(Context_dict._context_dict, ft, window)
+    
+    covariance = calculate_covariance(vocab._context_dict, ft, window)
 
 
     baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]

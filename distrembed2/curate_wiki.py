@@ -30,8 +30,9 @@ def main ():
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
 
     max_length = 40
-    begin = 50000
-    end = 100000
+    max_context = 100
+    # begin = 50000
+    # end = 100000
 
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # wikidata = wikidata['train']['text'][int(begin):int(end)]
@@ -52,7 +53,7 @@ def main ():
         
         words = sentence.split()
         for word in words:
-            if word in baroni_set and sentence_counter[word] < 100:
+            if word in baroni_set and sentence_counter[word] < int(max_context):
                 
                     collected_sentences.append(sentence)
                     sentence_counter[word] += 1
