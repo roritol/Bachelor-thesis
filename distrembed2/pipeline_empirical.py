@@ -158,7 +158,7 @@ def main():
     vocab = Context_dict()
     vocab.fit(tok.words(wikidata), baroni_set)
     
-    ft = fasttext.load_model("../Data/ft_reduced_100.bin")
+    ft = fasttext.load_model("../Data/cc.en.100.bin")
     
     # Calculate number of batches 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
