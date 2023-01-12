@@ -17,6 +17,8 @@ import datasets
 from sklearn.metrics import average_precision_score
 from transformers import (DistilBertTokenizerFast, DistilBertModel)
 
+import sys
+
 def import_baroni(neg_file, pos_file):
     filenames = ["neg_file", "pos_file"]
 
@@ -156,7 +158,7 @@ def main():
     window = 5
     begin = 50000
     end = 51000
-    is_diagonal = True
+    is_diagonal = sys.argv[1]
 
     neg_file = "../data_shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
