@@ -4,6 +4,7 @@ from tqdm import tqdm
 import pickle5 as pickle 
 import random
 import datasets
+import sys
 
 
 def import_baroni(neg_file, pos_file):
@@ -29,8 +30,8 @@ def main ():
     pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
 
-    max_length = 40
-    max_context = 100
+    max_length = 100
+    max_context = sys.argv[1]
     # begin = 50000
     # end = 100000
 
@@ -58,12 +59,14 @@ def main ():
                     collected_sentences.append(sentence)
                     sentence_counter[word] += 1
 
-    with open('../data_distrembed/curated50000.pickle', 'wb') as handle:
+    with open(f'../data_distrembed/curated{max_context}.pickle', 'wb') as handle:
         pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("collected_sentences    :" , collected_sentences[:10])
     print("sentence_counter       :", sentence_counter)
     print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(baroni_set)}")
+    print("max_context            :", max_context)
+    print("max_length sentence    :", max_length)
 
 if __name__ == '__main__':
     main()

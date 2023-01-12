@@ -119,7 +119,7 @@ def calculate_covariance(context_dict, ft, window):
 
     return covariance
 
-def calculate_kl(covariance, ft, wordpair):
+def calculate_kl(covariance, ft, wordpair, is_diagonal):
     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
     covariance_matrix1 = covariance[wordpair[0]]
     covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
@@ -127,28 +127,15 @@ def calculate_kl(covariance, ft, wordpair):
     covariance_matrix2 = covariance[wordpair[1]]
     covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
 
-    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
-    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+    if is_diagonal:
+        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+    else:
+        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
+        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
 
     return float(torch.distributions.kl.kl_divergence(p, q))
 
-def calculate_diag_kl(covariance, ft, wordpair):
-    
-    # Get the mean vectors and covariance matrices for the two words in the word pair
-    mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
-    covariance_matrix1 = covariance[wordpair[0]]
-    covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
-    mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
-    covariance_matrix2 = covariance[wordpair[1]]
-    covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
-    # Create PyTorch multivariate normal distributions using the mean vectors and covariance matrices
-    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
-    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
-
-    # Calculate the KL divergence between the two distributions
-    kl = torch.distributions.kl.kl_divergence(p, q)
-
-    return kl.item()
 
 
 def main():
@@ -221,20 +208,12 @@ def main():
     baroni_subset_kl = []
     baroni_subset_cos = []
 
-
-    if is_diagonal:
-        for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
-            baroni_subset_kl.append(calculate_diag_kl(covariance, ft, wordpair))
-            baroni_subset_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
-                                                    ft.get_word_vector(wordpair[1])))
-    else: 
-        for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
-            baroni_subset_kl.append(calculate_kl(covariance, ft, wordpair))
-            baroni_subset_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
-                                                    ft.get_word_vector(wordpair[1])))
+    for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
+        baroni_subset_kl.append(calculate_kl(covariance, ft, wordpair, is_diagonal))
+        baroni_subset_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
+                                                ft.get_word_vector(wordpair[1])))
 
 
-       
     df1['KL score'] = baroni_subset_kl
     df1['COS score'] = baroni_subset_cos
 
@@ -244,7 +223,7 @@ def main():
     print(df1)
     print("Diagonal             : ", is_diagonal)
     print("COS AP: ", average_precision_score(df1["True label"], df1["COS score"]))
-    print("KL AP: ", average_precision_score(df1["True label"], -df1["KL score"]))
+    print("KL AP: ",  average_precision_score(df1["True label"], -df1["KL score"]))
     print("batch size           : ", batch_size)
     print("Max scentence length : ", max_length)
     print(f"Wiki articles from  : {begin} to: {end}")

@@ -131,6 +131,8 @@ def main():
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     is_diagonal = sys.argv[1]
+    max_context = sys.argv[2]
+    
     save_vocab = False
     batch_size = 200
     unk_thresh = 2
@@ -148,7 +150,7 @@ def main():
     # wikidata = wikidata['train']['text'][int(begin):int(end)]
 
     # print("open pickeled data:")
-    with open('../data_distrembed/curated50000.pickle', 'rb') as f:
+    with open(f'../data_distrembed/curated{max_context}.pickle', 'rb') as f:
         wikidata = pickle.load(f)
 
 
