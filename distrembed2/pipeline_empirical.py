@@ -87,7 +87,7 @@ class Context_dict:
          # Creating a dictionary entry for each word in the texts
 
     def _update(self, all_text, words_of_interest, window):
-        for i, word in tqdm(enumerate(all_text)):
+        for i, word in enumerate(all_text):
             # Only update the context dict for words of interest
             if word in words_of_interest:
                 for w in range(window):
@@ -102,7 +102,7 @@ class Context_dict:
 def calculate_covariance(context_dict, ft, window):
     covariance = {}
 
-    for word, context in tqdm(context_dict.items()):
+    for word, context in context_dict.items():
         total = torch.zeros((100,100))
 
         for c_word in context:
@@ -134,8 +134,10 @@ def calculate_kl(covariance, ft, wordpair):
 def main():
     max_length = 50
     batch_size = 400
-    # unk_thresh = 10
+    local = True
     window = 5
+    begin = 50000
+    end = 51000
 
     neg_file = "../data_shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
@@ -146,31 +148,36 @@ def main():
 
     # wikidata = ast.literal_eval(data)
     # wikidata = wikidata["text"][:100]   
+    
+    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    wikidata = wikidata['train']['text'][int(begin):int(end)]
 
-    # wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-    #         for seq in tqdm(wikidata)
-    #         for sentence in seq.split(".")]
-
-    with open('../data_distrembed/curated50000.pickle', 'rb') as f:
-        wikidata = pickle.load(f)
+    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+            for seq in tqdm(wikidata)
+            for sentence in seq.split(".")]
+    print("test")
+    # with open('../data_distrembed/curated50000.pickle', 'rb') as f:
+    #     wikidata = pickle.load(f)
 
     tok = Tokenizer()
     vocab = Context_dict()
     vocab.fit(tok.words(wikidata), baroni_set)
     
-    ft = fasttext.load_model("../Data/cc.en.100.bin")
-    
+    if local:
+        ft = fasttext.load_model("../Data/ft_reduced_100.bin")
+    else:    
+        ft = fasttext.load_model("../Data/cc.en.100.bin")
+        
     # Calculate number of batches 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
     
-    for k in trange(n_batches):
+    for k in tqdm(range(n_batches)):
         # grab a batch_size chunk from seqs (wiki data)
         seqb = wikidata[batch_size*k:batch_size*(k+1)]
         words, subwords = tok(seqb)
         all_text = [word for sentence in words for word in sentence]
         vocab._update(all_text, baroni_set, window)
 
-    
     covariance = calculate_covariance(vocab._context_dict, ft, window)
 
 
@@ -205,7 +212,7 @@ def main():
         pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("COS AP: ", average_precision_score(df1["True label"], df1["COS score"]))
-    print("KL AP: ", average_precision_score(df1["True label"], df1["KL score"]))
+    print("KL AP: ", average_precision_score(df1["True label"], -df1["KL score"]))
 
 if __name__ == '__main__':
     main()
