@@ -134,7 +134,7 @@ def calculate_kl(covariance, ft, wordpair):
 def main():
     max_length = 50
     batch_size = 400
-    local = True
+    local = False
     window = 5
     begin = 50000
     end = 51000
