@@ -26,8 +26,8 @@ def import_baroni(neg_file, pos_file):
     return results_neg_file, results_pos_file, baroni, baroni_set
 
 def main ():
-    neg_file = "../Data_Shared/eacl2012-data/negative-examples.txtinput"
-    pos_file = "../Data_Shared/eacl2012-data/positive-examples.txtinput"
+    neg_file = "../data_shared/eacl2012-data/negative-examples.txtinput"
+    pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
 
     max_length = 100
