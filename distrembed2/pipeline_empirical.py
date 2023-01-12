@@ -130,6 +130,24 @@ def calculate_kl(covariance, ft, wordpair):
 
     return float(torch.distributions.kl.kl_divergence(p, q))
 
+def calculate_diag_kl(covariance, ft, wordpair):
+    
+    # Get the mean vectors and covariance matrices for the two words in the word pair
+    mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
+    covariance_matrix1 = covariance[wordpair[0]]
+    covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
+    mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
+    covariance_matrix2 = covariance[wordpair[1]]
+    covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
+    # Create PyTorch multivariate normal distributions using the mean vectors and covariance matrices
+    p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
+    q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
+
+    # Calculate the KL divergence between the two distributions
+    kl = torch.distributions.kl.kl_divergence(p, q)
+
+    return kl.item()
+
 
 def main():
     max_length = 50
@@ -138,6 +156,7 @@ def main():
     window = 5
     begin = 50000
     end = 51000
+    is_diagonal = True
 
     neg_file = "../data_shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
@@ -155,7 +174,7 @@ def main():
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
             for seq in tqdm(wikidata)
             for sentence in seq.split(".")]
-    print("test")
+
     # with open('../data_distrembed/curated50000.pickle', 'rb') as f:
     #     wikidata = pickle.load(f)
 
@@ -200,10 +219,19 @@ def main():
     baroni_subset_kl = []
     baroni_subset_cos = []
 
-    for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
-        baroni_subset_kl.append(calculate_kl(covariance, ft, wordpair))
-        baroni_subset_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
-                                                   ft.get_word_vector(wordpair[1])))
+
+    if is_diagonal:
+        for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
+            baroni_subset_kl.append(calculate_diag_kl(covariance, ft, wordpair))
+            baroni_subset_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
+                                                    ft.get_word_vector(wordpair[1])))
+    else: 
+        for wordpair in tqdm((baroni_pos_subset + baroni_neg_subset)):
+            baroni_subset_kl.append(calculate_kl(covariance, ft, wordpair))
+            baroni_subset_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
+                                                    ft.get_word_vector(wordpair[1])))
+
+
        
     df1['KL score'] = baroni_subset_kl
     df1['COS score'] = baroni_subset_cos
@@ -211,8 +239,15 @@ def main():
     with open('df1.pickle', 'wb') as handle:
         pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+    print(df1)
+    print("Diagonal             : ", is_diagonal)
     print("COS AP: ", average_precision_score(df1["True label"], df1["COS score"]))
     print("KL AP: ", average_precision_score(df1["True label"], -df1["KL score"]))
+    print("batch size           : ", batch_size)
+    print("Max scentence length : ", max_length)
+    print(f"Wiki articles from  : {begin} to: {end}")
+    print("total scentences     : ", len(wikidata))
+    print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
 
 if __name__ == '__main__':
     main()

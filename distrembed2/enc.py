@@ -103,7 +103,6 @@ def calculate_diag_kl(wordpair, embavg, vocab):
     # Get the mean vectors and covariance matrices for the two words in the word pair
     mean1, covariance_matrix1 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[0])) 
     mean2, covariance_matrix2 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[1])) 
-    n = int(100)
     # Create PyTorch multivariate normal distributions using the mean vectors and covariance matrices
     p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
     q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
