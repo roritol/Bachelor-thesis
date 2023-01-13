@@ -257,10 +257,13 @@ def main():
     print("KL AP                : ", average_precision_score(df1["True label"], -df1["KL score"]))
     print("batch size           : ", batch_size)
     print("unkown threshold     : ", unk_thresh)
+    print("context sentence     : ", max_context)
     print("Max scentence length : ", max_length)
     print(f"Wiki articles from  : {begin} to: {end}")
     print("total scentences     : ", len(wikidata))
     print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
+
+
 
 
 

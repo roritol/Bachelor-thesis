@@ -30,7 +30,7 @@ def main ():
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
 
-    max_length = 100
+    max_length = 40
     max_context = sys.argv[1]
     # begin = 50000
     # end = 100000
