@@ -152,11 +152,10 @@ def main():
     neg_file = "../data_shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
-    
+
     # print("open pickeled data:")
     with open(f'../data_distrembed/curated{max_context}.pickle', 'rb') as f:
         wikidata = pickle.load(f)
-
    
     
     # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
@@ -171,7 +170,7 @@ def main():
 
     tok = Tokenizer()
     vocab = Context_dict()
-    vocab.fit(tok.words(wikidata), baroni_set)
+    vocab.fit(tok.words(wikidata), baroni)
     
     if local:
         ft = fasttext.load_model("../Data/ft_reduced_100.bin")
@@ -186,7 +185,7 @@ def main():
         seqb = wikidata[batch_size*k:batch_size*(k+1)]
         words, subwords = tok(seqb)
         all_text = [word for sentence in words for word in sentence]
-        vocab._update(all_text, baroni_set, window)
+        vocab._update(all_text, baroni, window)
 
     covariance = calculate_covariance(vocab._context_dict, ft, window)
 
@@ -202,6 +201,8 @@ def main():
 
     for i in baroni_neg_subset:
         baroni_subset_label.append([i, 0])
+
+    print("baroni_subset_label: ", len(baroni_subset_label))
 
     # MAKE DATAFRAME
     df1 = pd.DataFrame(baroni_subset_label, columns =['Wordpair', 'True label'])

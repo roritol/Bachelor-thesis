@@ -207,8 +207,8 @@ def main():
 
         torch.cuda.empty_cache()
 
-    print("open the embavg file")
-    torch.save(embavg, "../data_distrembed/first10.embavg.pt")
+    # print("open the embavg file")
+    # torch.save(embavg, "../data_distrembed/first10.embavg.pt")
     # embavg = torch.load('../data_distrembed/first10.avgs.pt')
     # get f1 scores etc
 
