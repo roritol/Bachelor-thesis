@@ -139,6 +139,7 @@ def calculate_kl(covariance, ft, wordpair, is_diagonal):
 
 
 def main():
+    
     max_length = 50
     batch_size = 400
     local = False
@@ -146,23 +147,24 @@ def main():
     begin = 50000
     end = 51000
     is_diagonal = sys.argv[1]
+    max_context = sys.argv[2]
 
     neg_file = "../data_shared/eacl2012-data/negative-examples.txtinput"
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    # with open('../data_shared/wiki_subset.txt') as file:
-    #     data = file.read()
+    # print("open pickeled data:")
+    with open(f'../data_distrembed/curated{max_context}.pickle', 'rb') as f:
+        wikidata = pickle.load(f)
 
-    # wikidata = ast.literal_eval(data)
-    # wikidata = wikidata["text"][:100]   
+   
     
-    wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    wikidata = wikidata['train']['text'][int(begin):int(end)]
+    # wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+    # wikidata = wikidata['train']['text'][int(begin):int(end)]
 
-    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in tqdm(wikidata)
-            for sentence in seq.split(".")]
+    # wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+    #         for seq in tqdm(wikidata)
+    #         for sentence in seq.split(".")]
 
     # with open('../data_distrembed/curated50000.pickle', 'rb') as f:
     #     wikidata = pickle.load(f)
