@@ -12,7 +12,7 @@ import fasttext
 import fasttext.util
 
 from utility import create_combined_subset, calculate_kl_emp, calculate_covariance
-from utility import import_baroni, cosine_similarity, calculate_kl_bert
+from utility import import_baroni, cosine_similarity, calculate_kl_bert, bert_cosine_similarity
 
 import sys
 
@@ -194,7 +194,7 @@ def main():
     context_dict.fit(tok.words(wikidata), baroni)
 
     ft = fasttext.load_model("../data/cc.en.100.bin")
-        
+
     # Calculate number of batches 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
     
@@ -226,7 +226,7 @@ def main():
     print("CALCULATE KL and COS")
     for wordpair in tqdm((baroni_pos + baroni_neg)):
         bert_kl.append(calculate_kl_bert(wordpair, embavg, is_diagonal, vocab))
-        bert_cos.append(cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
+        bert_cos.append(bert_cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
                                                 embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
 
         emp_kl.append(calculate_kl_emp(covariance, ft, wordpair, is_diagonal))

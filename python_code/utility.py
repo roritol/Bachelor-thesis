@@ -59,17 +59,17 @@ def text_preprocessing(
 
     return text
 
-# def cosine_similarity(a, b):
-#     nominator = np.dot(a, b)
+def cosine_similarity(a, b):
+    nominator = np.dot(a, b)
     
-#     a_norm = np.sqrt(np.sum(a**2))
-#     b_norm = np.sqrt(np.sum(b**2))
+    a_norm = np.sqrt(np.sum(a**2))
+    b_norm = np.sqrt(np.sum(b**2))
     
-#     denominator = a_norm * b_norm
+    denominator = a_norm * b_norm
     
-#     cosine_similarity = nominator / denominator
+    cosine_similarity = nominator / denominator
     
-#     return cosine_similarity
+    return cosine_similarity
 
 def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
     # Get the mean vectors and covariance matrices for the two words in the word pair
@@ -89,7 +89,7 @@ def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
 
     return kl.item()
 
-def cosine_similarity(a, b):
+def bert_cosine_similarity(a, b):
     nominator = torch.dot(a, b)
     
     a_norm = torch.sqrt(torch.sum(a**2))
