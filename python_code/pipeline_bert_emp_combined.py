@@ -107,15 +107,15 @@ def main():
 
     is_diagonal = sys.argv[1]
     max_context = sys.argv[2]
-    curated_data = sys.argv[3]
+    use_curated_data = sys.argv[3]
     
-    save_vocab = False
+    save_vocab = True
     batch_size = 200
     unk_thresh = 2
     max_length = 40
     # set the slice of the wikidata
-    begin = 50000
-    end = 51000    
+    begin = 0
+    end = 100    
 
     window = 5
 
@@ -123,7 +123,7 @@ def main():
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    if curated_data:
+    if use_curated_data:
         print("open curated data:")
         with open(f'../data_distrembed/curated{max_context}.pickle', 'rb') as f:
             wikidata = pickle.load(f)
@@ -131,11 +131,19 @@ def main():
         wikidata = datasets.load_dataset('wikipedia', '20200501.en')
         wikidata = wikidata['train']['text'][int(begin):int(end)]
 
-        print("truncating the scentences")
-        wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-                for seq in tqdm(wikidata)
-                for sentence in seq.split(".")]
+    # import ast
+    # with open('../data_shared/wiki_subset.txt') as f:
+    #     wikidata = f.read()
+        
+    # wikidata = ast.literal_eval(wikidata)
 
+    # wikidata = wikidata['text'][int(begin):int(end)]
+    print("truncating the scentences")
+    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+            for seq in tqdm(wikidata)
+            for sentence in seq.split(".")]
+
+    
 
     tok = Tokenizer()
     vocab = Vocab()
