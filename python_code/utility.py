@@ -76,10 +76,11 @@ def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
     mean1, covariance_matrix1 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[0])) 
     mean2, covariance_matrix2 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[1])) 
     
+   
     # Create PyTorch multivariate normal distributions using the mean vectors and covariance matrices
     if is_diagonal:
-        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
-        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
+        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, torch.eye([768, 768])) # covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1))
+        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, torch.eye([768, 768])) # covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
     else:
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
@@ -172,8 +173,10 @@ def calculate_kl_emp(covariance, ft, wordpair, is_diagonal):
     covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
 
     if is_diagonal:
-        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
-        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
+        # p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
+        # q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
+        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, torch.eye([768, 768])) # covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1))
+        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, torch.eye([768, 768])) # covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
     else:
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
