@@ -247,8 +247,9 @@ def main():
     df1['empirical KL score'] = emp_kl
     df1['empirical COS score'] = emp_cos
 
-
-    df1.to_pickle(f'../data_shared/df_curated{max_context}_{is_diagonal}.pickle')
+    df1.to_csv(f'../data_shared/df_curated{max_context}_diag_{is_diagonal}.csv', index=False)
+    with open(f'../data_shared/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
+        pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print(df1)
     print("Diagonal             : ", is_diagonal)
