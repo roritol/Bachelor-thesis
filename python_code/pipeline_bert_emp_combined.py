@@ -248,7 +248,7 @@ def main():
     df1['empirical COS score'] = emp_cos
 
 
-    df1.to_pickle(f'../data_shared/df_curated{max_context}.pickle')
+    df1.to_pickle(f'../data_shared/df_curated{max_context}_{is_diagonal}.pickle')
 
     print(df1)
     print("Diagonal             : ", is_diagonal)
