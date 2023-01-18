@@ -32,7 +32,7 @@ def import_baroni(neg_file, pos_file):
     with open(pos_file) as f:
         for line in f:
             results_pos_file.append(line.replace("-n", "").replace("\n", "").strip("").split("\t"))
-    baroni = np.concatenate([results_neg_file, results_pos_file])
+    baroni = sum(results_neg_file, []) + sum(results_pos_file, [])
     baroni_set = set(baroni)
 
     return results_neg_file, results_pos_file, baroni, baroni_set
