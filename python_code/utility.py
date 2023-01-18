@@ -164,62 +164,39 @@ def calculate_kl(covariance, ft, wordpair):
 
 # For the Emperical method
 
-# def calculate_covariance(context_dict, ft, window):
-#     covariance = {}
-
-#     for word, context in context_dict.items():
-#         total = torch.zeros((100,100))
-
-#         for c_word in context:
-#             # would it be faster to store the matrixes of the words?
-#             total += torch.from_numpy(np.outer((ft.get_word_vector(c_word) - 
-#                                       ft.get_word_vector(word)), 
-#                                       (ft.get_word_vector(c_word) - 
-#                                       ft.get_word_vector(word))))
-            
-#             cov = (total / (len(context_dict[word]) * window))
-#             covariance[word] = .001 * torch.eye(100) + cov
-
-#     return covariance
-
-
-# def calculate_kl_emp(covariance, ft, wordpair, is_diagonal):
-#     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
-#     covariance_matrix1 = covariance[wordpair[0]]
-#     covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
-#     mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
-#     covariance_matrix2 = covariance[wordpair[1]]
-#     covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
-
-#     if is_diagonal:
-#         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
-#         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
-#     else:
-#         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
-#         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
-    
-        
-#     return float(torch.distributions.kl.kl_divergence(p, q))
-
 def calculate_covariance(context_dict, ft, window):
     covariance = {}
+
     for word, context in context_dict.items():
-        vectors = np.array([ft.get_word_vector(c_word) for c_word in context])
-        mean_vec = vectors.mean(axis=0)
-        centered_vecs = vectors - mean_vec
-        total = (centered_vecs[:, None, :] * centered_vecs[:, :, None]).mean(axis=0)
-        covariance[word] = total / window
+        total = torch.zeros((100,100))
+
+        for c_word in context:
+            # would it be faster to store the matrixes of the words?
+            total += torch.from_numpy(np.outer((ft.get_word_vector(c_word) - 
+                                      ft.get_word_vector(word)), 
+                                      (ft.get_word_vector(c_word) - 
+                                      ft.get_word_vector(word))))
+            
+            cov = (total / (len(context_dict[word]) * window))
+            covariance[word] = .001 * torch.eye(100) + cov
+
     return covariance
+
 
 def calculate_kl_emp(covariance, ft, wordpair, is_diagonal):
     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
-    mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
     covariance_matrix1 = covariance[wordpair[0]]
+    covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
+    mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
     covariance_matrix2 = covariance[wordpair[1]]
+    covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
+
     if is_diagonal:
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
     else:
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+    
+        
     return float(torch.distributions.kl.kl_divergence(p, q))
