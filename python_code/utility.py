@@ -84,9 +84,9 @@ def cosine_similarity(a, b):
     
     return cosine_similarity
 
-def cosine_similarity(a, b):
-    cosine_similarity = 1 - distance.cosine(a, b)
-    return cosine_similarity
+# def cosine_similarity(a, b):
+#     cosine_similarity = 1 - distance.cosine(a, b)
+#     return cosine_similarity
 
 def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
     # Get the mean vectors and covariance matrices for the two words in the word pair
@@ -108,21 +108,21 @@ def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
     return kl.item()
 
 
-# def bert_cosine_similarity(a, b):
-#     nominator = torch.dot(a, b)
-    
-#     a_norm = torch.sqrt(torch.sum(a**2))
-#     b_norm = torch.sqrt(torch.sum(b**2))
-    
-#     denominator = a_norm * b_norm
-    
-#     cosine_similarity = nominator / denominator
-    
-#     return cosine_similarity
-
 def bert_cosine_similarity(a, b):
-    cosine_similarity = 1 - torch.distributions.kl.kl_divergence(a, b)
+    nominator = torch.dot(a, b)
+    
+    a_norm = torch.sqrt(torch.sum(a**2))
+    b_norm = torch.sqrt(torch.sum(b**2))
+    
+    denominator = a_norm * b_norm
+    
+    cosine_similarity = nominator / denominator
+    
     return cosine_similarity
+
+# def bert_cosine_similarity(a, b):
+#     cosine_similarity = 1 - torch.distributions.kl.kl_divergence(a, b)
+#     return cosine_similarity
 
 #  In practice, it is also necessary to add a small ridge term 
 #  δ > 0 to the diagonal of the matrix to regularize and avoid 
