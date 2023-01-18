@@ -84,9 +84,6 @@ def cosine_similarity(a, b):
     
     return cosine_similarity
 
-# def cosine_similarity(a, b):
-#     cosine_similarity = 1 - distance.cosine(a, b)
-#     return cosine_similarity
 
 def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
     # Get the mean vectors and covariance matrices for the two words in the word pair
@@ -119,10 +116,6 @@ def bert_cosine_similarity(a, b):
     cosine_similarity = nominator / denominator
     
     return cosine_similarity
-
-# def bert_cosine_similarity(a, b):
-#     cosine_similarity = 1 - torch.distributions.kl.kl_divergence(a, b)
-#     return cosine_similarity
 
 #  In practice, it is also necessary to add a small ridge term 
 #  δ > 0 to the diagonal of the matrix to regularize and avoid 
@@ -171,7 +164,7 @@ def calculate_covariance(context_dict, ft, window):
     covariance = {}
 
     for word, context in context_dict.items():
-        total = torch.zeros((100,100))
+        total = torch.zeros((300,300))
 
         for c_word in context:
             # would it be faster to store the matrixes of the words?
@@ -181,7 +174,7 @@ def calculate_covariance(context_dict, ft, window):
                                       ft.get_word_vector(word))))
             
             cov = (total / (len(context_dict[word]) * window))
-            covariance[word] = .001 * torch.eye(100) + cov
+            covariance[word] = .001 * torch.eye(300) + cov
 
     return covariance
 

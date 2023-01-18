@@ -123,31 +123,33 @@ def main():
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    if use_curated_data:
-        print("open curated data:")
-        with open(f'../data_distrembed/curated{max_context}.pickle', 'rb') as f:
-            wikidata = pickle.load(f)
-    else:
-        wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-        wikidata = wikidata['train']['text'][int(begin):int(end)]
-        print("truncating the scentences")
-        wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in tqdm(wikidata)
-            for sentence in seq.split(".")]
-    
 
-    tok = Tokenizer()
-    vocab = Vocab()
-    print("fitting the vocab")
-    vocab.fit(tok.words(wikidata), baroni)
+    for i in range(0,1000,100):
+        max_context = i 
+
+        if use_curated_data:
+            print("open curated data:")
+            with open(f'../data_distrembed/curated{max_context}.pickle', 'rb') as f:
+                wikidata = pickle.load(f)
+        else:
+            wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+            wikidata = wikidata['train']['text'][int(begin):int(end)]
+            print("truncating the scentences")
+            wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+                for seq in tqdm(wikidata)
+                for sentence in seq.split(".")]
+
+
+        tok = Tokenizer()
+        vocab = Vocab()
+        print("fitting the vocab")
+        vocab.fit(tok.words(wikidata), baroni)
 
 
 # BERT METHOD
 
-    for i in range(0,1000,100):
-
         if save_vocab:
-            with open('../data_distrembed/onetenth_vocab.pickle', 'wb') as f:
+            with open(f'../data_distrembed/is_diagonal_{is_diagonal}{i}_vocab.pickle', 'wb') as f:
                 pickle.dump(vocab,f)
 
         embavg = EmbedAverages(len(vocab), dim=768)
@@ -183,7 +185,7 @@ def main():
             torch.cuda.empty_cache()
         
         if save_vocab:
-            torch.save(embavg, "../data_distrembed/onetenth_vocab.embavg.pt")
+            torch.save(embavg, f"../data_distrembed/is_diagonal_{is_diagonal}{i}_vocab.embavg.pt")
             # embavg = torch.load('../data_distrembed/first10.avgs.pt')
 
 
@@ -193,7 +195,7 @@ def main():
         context_dict = Context_dict()
         context_dict.fit(tok.words(wikidata), baroni)
 
-        ft = fasttext.load_model("../data/cc.en.100.bin")
+        ft = fasttext.load_model("../data/cc.en.300.bin")
 
         # Calculate number of batches 
         n_batches = 1 + (len(wikidata[:]) // batch_size)
