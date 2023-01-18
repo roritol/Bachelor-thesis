@@ -105,9 +105,9 @@ def main():
     
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    is_diagonal = sys.argv[1]
-    max_context = sys.argv[2]
-    use_curated_data = sys.argv[3]
+    is_diagonal = bool(int(sys.argv[1]))
+    max_context = int(sys.argv[2])
+    use_curated_data = bool(int(sys.argv[3]))
     
     save_vocab = True
     batch_size = 200
