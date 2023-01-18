@@ -172,12 +172,10 @@ def calculate_kl_emp(covariance, ft, wordpair, is_diagonal):
     covariance_matrix2 = covariance[wordpair[1]]
     covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
 
-    if bool(is_diagonal) is True:
-        print(f"is_diagonal == True = {is_diagonal}")
+    if is_diagonal:
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
-    if bool(is_diagonal) is False:
-        print(f"is_diagonal == False = {is_diagonal}")
+    else:
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
     
