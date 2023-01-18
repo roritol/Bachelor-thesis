@@ -1,5 +1,4 @@
-from collections import Counter
-from tqdm import trange
+
 from tqdm import tqdm
 import pickle5 as pickle 
 import random
@@ -14,8 +13,6 @@ def main ():
 
     max_length = 40
     max_context = int(sys.argv[1])
-    # begin = 50000
-    # end = 100000
 
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # wikidata = wikidata['train']['text'][int(begin):int(end)]
@@ -31,24 +28,26 @@ def main ():
     # Shuffle the order of the sentences in wikidata
     random.shuffle(wikidata)
 
+    for i in range(0,1000,100):
+        max_context = i
     # Iterate through the shuffled list of sentences
-    for sentence in wikidata:
+        for sentence in wikidata:
         
-        words = sentence.split()
-        for word in words:
-            if word in baroni_set and sentence_counter[word] < int(max_context):
-                
-                    collected_sentences.append(sentence)
-                    sentence_counter[word] += 1
+            words = sentence.split()
+            for word in words:
+                if word in baroni_set and sentence_counter[word] < int(max_context):
+                    
+                        collected_sentences.append(sentence)
+                        sentence_counter[word] += 1
 
-    with open(f'../data_distrembed/curated{max_context}.pickle', 'wb') as handle:
-        pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(f'../data_distrembed/curated{max_context}_random.pickle', 'wb') as handle:
+            pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    print("collected_sentences    :" , collected_sentences[:10])
-    print("sentence_counter       :", sentence_counter)
-    print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(baroni_set)}")
-    print("max_context            :", max_context)
-    print("max_length sentence    :", max_length)
+        print("max_context   :" , max_context)
+        print("max_length sentence    :", max_length)
+        print("sentence_counter       :", sentence_counter)
+        print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(baroni_set)}")
+        
 
 if __name__ == '__main__':
     main()

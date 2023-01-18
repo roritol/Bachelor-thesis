@@ -6,20 +6,33 @@ from scipy.spatial import distance
 import torch
 from collections import Counter
 
-def import_baroni(neg_file, pos_file):
-    filenames = ["neg_file", "pos_file"]
+# def import_baroni(neg_file, pos_file):
+#     filenames = ["neg_file", "pos_file"]
 
-    for i, file in enumerate([neg_file, pos_file]):
-        globals()['results_{}'.format(filenames[i])] = []
+#     for i, file in enumerate([neg_file, pos_file]):
+#         globals()['results_{}'.format(filenames[i])] = []
         
-        with open(file) as f:
-            line = f.readline()
-            while line:
-                globals()['results_{}'.format(filenames[i])].append(line.replace("-n", "").replace("\n", "").strip("").split("\t"))
-                line = f.readline()
-        f.close()
+#         with open(file) as f:
+#             line = f.readline()
+#             while line:
+#                 globals()['results_{}'.format(filenames[i])].append(line.replace("-n", "").replace("\n", "").strip("").split("\t"))
+#                 line = f.readline()
+#         f.close()
 
-    baroni = sum(results_neg_file, []) + sum(results_pos_file, [])
+#     baroni = sum(results_neg_file, []) + sum(results_pos_file, [])
+#     baroni_set = set(baroni)
+
+#     return results_neg_file, results_pos_file, baroni, baroni_set
+
+def import_baroni(neg_file, pos_file):
+    results_neg_file, results_pos_file = [], []
+    with open(neg_file) as f:
+        for line in f:
+            results_neg_file.append(line.replace("-n", "").replace("\n", "").strip("").split("\t"))
+    with open(pos_file) as f:
+        for line in f:
+            results_pos_file.append(line.replace("-n", "").replace("\n", "").strip("").split("\t"))
+    baroni = np.concatenate([results_neg_file, results_pos_file])
     baroni_set = set(baroni)
 
     return results_neg_file, results_pos_file, baroni, baroni_set
@@ -71,6 +84,10 @@ def cosine_similarity(a, b):
     
     return cosine_similarity
 
+def cosine_similarity(a, b):
+    cosine_similarity = 1 - distance.cosine(a, b)
+    return cosine_similarity
+
 def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
     # Get the mean vectors and covariance matrices for the two words in the word pair
     mean1, covariance_matrix1 = embavg.get_mean_covariance(vocab._tok_to_id.get(wordpair[0])) 
@@ -90,16 +107,21 @@ def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
 
     return kl.item()
 
+
+# def bert_cosine_similarity(a, b):
+#     nominator = torch.dot(a, b)
+    
+#     a_norm = torch.sqrt(torch.sum(a**2))
+#     b_norm = torch.sqrt(torch.sum(b**2))
+    
+#     denominator = a_norm * b_norm
+    
+#     cosine_similarity = nominator / denominator
+    
+#     return cosine_similarity
+
 def bert_cosine_similarity(a, b):
-    nominator = torch.dot(a, b)
-    
-    a_norm = torch.sqrt(torch.sum(a**2))
-    b_norm = torch.sqrt(torch.sum(b**2))
-    
-    denominator = a_norm * b_norm
-    
-    cosine_similarity = nominator / denominator
-    
+    cosine_similarity = 1 - torch.distributions.kl.kl_divergence(a, b)
     return cosine_similarity
 
 #  In practice, it is also necessary to add a small ridge term 
@@ -108,27 +130,46 @@ def bert_cosine_similarity(a, b):
 
 def addDiagonal(matrix, x):
     assert x < 1, f"x greater than 0 expected, got: {x}"
-    
-    for i in range(len(matrix)):
-        matrix[i][i] = matrix[i][i] + x
-    
+    np.fill_diagonal(matrix, matrix.diagonal()+x)
     return matrix
 
 
-def create_combined_subset(results_neg_file, results_pos_file, vocab):
-    baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
-    baroni_neg_subset = [x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
+# def create_combined_subset(results_neg_file, results_pos_file, vocab):
+#     baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
+#     baroni_neg_subset = [x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
 
-    baroni_subset_label = []
+#     baroni_subset_label = []
     
-    for i in baroni_pos_subset:
-        baroni_subset_label.append([i, 1])
+#     for i in baroni_pos_subset:
+#         baroni_subset_label.append([i, 1])
 
-    for i in baroni_neg_subset:
-        baroni_subset_label.append([i, 0])
+#     for i in baroni_neg_subset:
+#         baroni_subset_label.append([i, 0])
+
+#     return baroni_pos_subset, baroni_neg_subset, baroni_subset_label
+
+
+# def calculate_kl(covariance, ft, wordpair):
+#     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
+#     covariance_matrix1 = torch.from_numpy(covariance[wordpair[0]])
+#     covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
+#     mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
+#     covariance_matrix2 = torch.from_numpy(covariance[wordpair[1]])
+#     covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
+
+#     p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+#     q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+
+#     return float(torch.distributions.kl.kl_divergence(p, q))
+
+def create_combined_subset(results_neg_file, results_pos_file, vocab):
+    baroni_pos_subset = np.array([x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts])
+    baroni_neg_subset = np.array([x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts])
+
+    baroni_subset_label = np.concatenate((np.array([[x, 1] for x in baroni_pos_subset]), 
+                                           np.array([[x, 0] for x in baroni_neg_subset])), axis = 0)
 
     return baroni_pos_subset, baroni_neg_subset, baroni_subset_label
-
 
 def calculate_kl(covariance, ft, wordpair):
     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
@@ -142,42 +183,66 @@ def calculate_kl(covariance, ft, wordpair):
     q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
 
     return float(torch.distributions.kl.kl_divergence(p, q))
+    
 
 # For the Emperical method
 
+# def calculate_covariance(context_dict, ft, window):
+#     covariance = {}
+
+#     for word, context in context_dict.items():
+#         total = torch.zeros((100,100))
+
+#         for c_word in context:
+#             # would it be faster to store the matrixes of the words?
+#             total += torch.from_numpy(np.outer((ft.get_word_vector(c_word) - 
+#                                       ft.get_word_vector(word)), 
+#                                       (ft.get_word_vector(c_word) - 
+#                                       ft.get_word_vector(word))))
+            
+#             cov = (total / (len(context_dict[word]) * window))
+#             covariance[word] = .001 * torch.eye(100) + cov
+
+#     return covariance
+
+
+# def calculate_kl_emp(covariance, ft, wordpair, is_diagonal):
+#     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
+#     covariance_matrix1 = covariance[wordpair[0]]
+#     covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
+#     mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
+#     covariance_matrix2 = covariance[wordpair[1]]
+#     covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
+
+#     if is_diagonal:
+#         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
+#         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
+#     else:
+#         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+#         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+    
+        
+#     return float(torch.distributions.kl.kl_divergence(p, q))
+
 def calculate_covariance(context_dict, ft, window):
     covariance = {}
-
     for word, context in context_dict.items():
-        total = torch.zeros((100,100))
-
-        for c_word in context:
-            # would it be faster to store the matrixes of the words?
-            total += torch.from_numpy(np.outer((ft.get_word_vector(c_word) - 
-                                      ft.get_word_vector(word)), 
-                                      (ft.get_word_vector(c_word) - 
-                                      ft.get_word_vector(word))))
-            
-            cov = (total / (len(context_dict[word]) * window))
-            covariance[word] = .001 * torch.eye(100) + cov
-
+        vectors = np.array([ft.get_word_vector(c_word) for c_word in context])
+        mean_vec = vectors.mean(axis=0)
+        centered_vecs = vectors - mean_vec
+        total = (centered_vecs[:, None, :] * centered_vecs[:, :, None]).mean(axis=0)
+        covariance[word] = total / window
     return covariance
-
 
 def calculate_kl_emp(covariance, ft, wordpair, is_diagonal):
     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
-    covariance_matrix1 = covariance[wordpair[0]]
-    covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
     mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
+    covariance_matrix1 = covariance[wordpair[0]]
     covariance_matrix2 = covariance[wordpair[1]]
-    covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
-
     if is_diagonal:
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
     else:
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
-    
-        
     return float(torch.distributions.kl.kl_divergence(p, q))
