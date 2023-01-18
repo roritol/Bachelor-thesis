@@ -134,42 +134,20 @@ def addDiagonal(matrix, x):
     return matrix
 
 
-# def create_combined_subset(results_neg_file, results_pos_file, vocab):
-#     baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
-#     baroni_neg_subset = [x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
-
-#     baroni_subset_label = []
-    
-#     for i in baroni_pos_subset:
-#         baroni_subset_label.append([i, 1])
-
-#     for i in baroni_neg_subset:
-#         baroni_subset_label.append([i, 0])
-
-#     return baroni_pos_subset, baroni_neg_subset, baroni_subset_label
-
-
-# def calculate_kl(covariance, ft, wordpair):
-#     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
-#     covariance_matrix1 = torch.from_numpy(covariance[wordpair[0]])
-#     covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
-#     mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
-#     covariance_matrix2 = torch.from_numpy(covariance[wordpair[1]])
-#     covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
-
-#     p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
-#     q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
-
-#     return float(torch.distributions.kl.kl_divergence(p, q))
-
 def create_combined_subset(results_neg_file, results_pos_file, vocab):
-    baroni_pos_subset = np.array([x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts])
-    baroni_neg_subset = np.array([x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts])
+    baroni_pos_subset = [x for x in results_pos_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
+    baroni_neg_subset = [x for x in results_neg_file if x[0] in vocab._tok_counts and x[1] in vocab._tok_counts]
 
-    baroni_subset_label = np.concatenate((np.array([[x, 1] for x in baroni_pos_subset]), 
-                                           np.array([[x, 0] for x in baroni_neg_subset])), axis = 0)
+    baroni_subset_label = []
+    
+    for i in baroni_pos_subset:
+        baroni_subset_label.append([i, 1])
+
+    for i in baroni_neg_subset:
+        baroni_subset_label.append([i, 0])
 
     return baroni_pos_subset, baroni_neg_subset, baroni_subset_label
+
 
 def calculate_kl(covariance, ft, wordpair):
     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
@@ -183,7 +161,6 @@ def calculate_kl(covariance, ft, wordpair):
     q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
 
     return float(torch.distributions.kl.kl_divergence(p, q))
-    
 
 # For the Emperical method
 
