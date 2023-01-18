@@ -123,6 +123,7 @@ def main():
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
+    df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
 
     for i in range(0,1000,100):
         max_context = i 
@@ -261,6 +262,12 @@ def main():
         print(f"Wiki articles from  : {begin} to: {end}")
         print("total scentences     : ", len(wikidata))
         print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
+        
+        list = ['Max Context', f'BERT{max_context}', 'KL Score AP',  average_precision_score(df1["True label"], -df1["bert KL score"]), 'COS Score AP', average_precision_score(df1["True label"], df1["bert COS score"])]
+        df.loc[len(df)] = list
+        list = ['Max Context', f'BERT{max_context}', 'KL Score AP',  average_precision_score(df1["True label"], -df1["empirical KL score"]), 'COS Score AP', average_precision_score(df1["True label"], df1["empirical COS score"])]
+        df.loc[len(df)] = list
+
 
 
 
