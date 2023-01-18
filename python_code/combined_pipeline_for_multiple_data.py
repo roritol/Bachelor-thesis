@@ -125,7 +125,7 @@ def main():
     
     df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
 
-    for i in range(0,1000,100):
+    for i in range(100,1000,100):
         max_context = i 
 
         if use_curated_data:
