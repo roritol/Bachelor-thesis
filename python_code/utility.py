@@ -130,7 +130,10 @@ def bert_cosine_similarity(a, b):
 
 def addDiagonal(matrix, x):
     assert x < 1, f"x greater than 0 expected, got: {x}"
-    np.fill_diagonal(matrix, matrix.diagonal()+x)
+    
+    for i in range(len(matrix)):
+        matrix[i][i] = matrix[i][i] + x
+    
     return matrix
 
 
