@@ -275,7 +275,7 @@ def main():
     list = ['Max Context', f'BERT{max_context}', 'KL Score AP',  average_precision_score(df1["True label"], -df1["empirical KL score"]), 'COS Score AP', average_precision_score(df1["True label"], df1["empirical COS score"])]
     df.loc[len(df)] = list
     
-    with open(f'../data_distrembed/df_AP{max_context}_random_{is_diagonal}.pickle', 'rb') as f:
+    with open(f'../data_shared/df_AP{max_context}_random_{is_diagonal}.pickle', 'rb') as f:
         pickle.dump(df, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
