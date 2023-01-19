@@ -125,7 +125,7 @@ def main():
     
     if use_curated_data:
         print("open curated data:")
-        with open(f'../data_distrembed/curated{max_context}.pickle', 'rb') as f:
+        with open(f'../data_distrembed/curated{max_context}_random.pickle', 'rb') as f:
             wikidata = pickle.load(f)
     else:
         wikidata = datasets.load_dataset('wikipedia', '20200501.en')
@@ -267,7 +267,16 @@ def main():
     print(f"Wiki articles from  : {begin} to: {end}")
     print("total scentences     : ", len(wikidata))
     print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
+    
+    df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
 
+    list = ['Max Context', f'BERT{max_context}', 'KL Score AP',  average_precision_score(df1["True label"], -df1["bert KL score"]), 'COS Score AP', average_precision_score(df1["True label"], df1["bert COS score"])]
+    df.loc[len(df)] = list
+    list = ['Max Context', f'BERT{max_context}', 'KL Score AP',  average_precision_score(df1["True label"], -df1["empirical KL score"]), 'COS Score AP', average_precision_score(df1["True label"], df1["empirical COS score"])]
+    df.loc[len(df)] = list
+    
+    with open(f'../data_distrembed/df_AP{max_context}_random_{is_diagonal}.pickle', 'rb') as f:
+        pickle.dump(df, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 
