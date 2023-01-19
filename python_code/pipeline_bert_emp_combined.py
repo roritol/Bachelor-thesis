@@ -275,7 +275,7 @@ def main():
     list2 = [f'EMP{max_context}',  average_precision_score(df1["True label"], -df1["empirical KL score"]), average_precision_score(df1["True label"], df1["empirical COS score"])]
     df = pd.DataFrame([list1, list2],columns =['Max Context', 'KL Score AP', 'COS Score AP'])
     
-    with open(f'../data_shared/df_AP{max_context}_random_{is_diagonal}.pickle', 'rb') as f:
+    with open(f'../data_shared/df_AP{max_context}_random_{is_diagonal}.pickle', 'wb') as f:
         pickle.dump(df, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
