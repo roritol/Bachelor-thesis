@@ -268,12 +268,11 @@ def main():
     print("total scentences     : ", len(wikidata))
     print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
     
-    df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
+    
 
-    list = ['Max Context', f'BERT{max_context}', 'KL Score AP',  average_precision_score(df1["True label"], -df1["bert KL score"]), 'COS Score AP', average_precision_score(df1["True label"], df1["bert COS score"])]
-    df.loc[len(df)] = list
-    list = ['Max Context', f'BERT{max_context}', 'KL Score AP',  average_precision_score(df1["True label"], -df1["empirical KL score"]), 'COS Score AP', average_precision_score(df1["True label"], df1["empirical COS score"])]
-    df.loc[len(df)] = list
+    list1 = [f'BERT{max_context}', average_precision_score(df1["True label"], -df1["bert KL score"]), average_precision_score(df1["True label"], df1["bert COS score"])]
+    list2 = [f'EMP{max_context}',  average_precision_score(df1["True label"], -df1["empirical KL score"]), average_precision_score(df1["True label"], df1["empirical COS score"])]
+    df = pd.DataFrame([list1, list2],columns =['Max Context', 'KL Score AP', 'COS Score AP'])
     
     with open(f'../data_shared/df_AP{max_context}_random_{is_diagonal}.pickle', 'rb') as f:
         pickle.dump(df, f, protocol=pickle.HIGHEST_PROTOCOL)
