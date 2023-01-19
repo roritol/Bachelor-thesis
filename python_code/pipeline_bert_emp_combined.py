@@ -201,7 +201,7 @@ def main():
     context_dict = Context_dict()
     context_dict.fit(tok.words(wikidata), baroni)
 
-    ft = fasttext.load_model("../data/cc.en.300.bin")
+    ft = fasttext.load_model("../data/cc.en.100.bin")
 
     # Calculate number of batches 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
@@ -213,6 +213,7 @@ def main():
         all_text = [word for sentence in words for word in sentence]
         context_dict._update(all_text, baroni, window)
 
+    print("calculate covariance")
     covariance = calculate_covariance(context_dict._context_dict, ft, window)
 
 

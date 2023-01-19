@@ -164,7 +164,7 @@ def calculate_covariance(context_dict, ft, window):
     covariance = {}
 
     for word, context in context_dict.items():
-        total = torch.zeros((300,300))
+        total = torch.zeros((100,100))
 
         for c_word in context:
             # would it be faster to store the matrixes of the words?
@@ -174,7 +174,7 @@ def calculate_covariance(context_dict, ft, window):
                                       ft.get_word_vector(word))))
             
             cov = (total / (len(context_dict[word]) * window))
-            covariance[word] = .001 * torch.eye(300) + cov
+            covariance[word] = .001 * torch.eye(100) + cov
 
     return covariance
 
