@@ -160,44 +160,44 @@ def calculate_kl(covariance, ft, wordpair):
 
 # For the Emperical method
 
-def calculate_covariance(context_dict, ft, window):
-    covariance = {}
-
-    for word, context in context_dict.items():
-        total = torch.zeros((100,100))
-
-        for c_word in tqdm(context):
-            # would it be faster to store the matrixes of the words?
-            total += torch.from_numpy(np.outer((ft.get_word_vector(c_word) - 
-                                      ft.get_word_vector(word)), 
-                                      (ft.get_word_vector(c_word) - 
-                                      ft.get_word_vector(word))))
-            
-            cov = (total / (len(context_dict[word]) * window))
-            covariance[word] = .001 * torch.eye(100) + cov
-
-    return covariance
-
 # def calculate_covariance(context_dict, ft, window):
 #     covariance = {}
-#     word_vectors = {}  # Store the word vectors of the words in the context_dict in memory
-    
-#     for word in context_dict.keys():
-#         word_vectors[word] = ft.get_word_vector(word)
-    
+
 #     for word, context in context_dict.items():
 #         total = torch.zeros((100,100))
-        
-#         for c_word in context:
-#             if c_word not in word_vectors:  # If the word vector has not been stored yet, get it
-#                 word_vectors[c_word] = ft.get_word_vector(c_word)
+
+#         for c_word in tqdm(context):
+#             # would it be faster to store the matrixes of the words?
+#             total += torch.from_numpy(np.outer((ft.get_word_vector(c_word) - 
+#                                       ft.get_word_vector(word)), 
+#                                       (ft.get_word_vector(c_word) - 
+#                                       ft.get_word_vector(word))))
             
-#             total += torch.from_numpy(np.outer((word_vectors[c_word] - word_vectors[word]), 
-#                                       (word_vectors[c_word] - word_vectors[word])))
-            
-#         cov = (total / (len(context_dict[word]) * window))
-#         covariance[word] = .001 * torch.eye(100) + cov
+#             cov = (total / (len(context_dict[word]) * window))
+#             covariance[word] = .001 * torch.eye(100) + cov
+
 #     return covariance
+
+def calculate_covariance(context_dict, ft, window):
+    covariance = {}
+    word_vectors = {}  # Store the word vectors of the words in the context_dict in memory
+    
+    for word in context_dict.keys():
+        word_vectors[word] = ft.get_word_vector(word)
+    
+    for word, context in tqdm(context_dict.items()):
+        total = torch.zeros((100,100))
+        
+        for c_word in context:
+            if c_word not in word_vectors:  # If the word vector has not been stored yet, get it
+                word_vectors[c_word] = ft.get_word_vector(c_word)
+            
+            total += torch.from_numpy(np.outer((word_vectors[c_word] - word_vectors[word]), 
+                                      (word_vectors[c_word] - word_vectors[word])))
+            
+        cov = (total / (len(context_dict[word]) * window))
+        covariance[word] = .001 * torch.eye(100) + cov
+    return covariance
 
 
 def calculate_kl_emp(covariance, ft, wordpair, is_diagonal):
