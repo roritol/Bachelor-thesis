@@ -130,7 +130,7 @@ def main():
 
         if use_curated_data:
             print("open curated data:")
-            with open(f'../data_distrembed/df_curated1-10/curated{max_context}.pickle', 'rb') as f:
+            with open(f'../data_distrembed/curated1-10/curated{max_context}.pickle', 'rb') as f:
                 wikidata = pickle.load(f)
         else:
             wikidata = datasets.load_dataset('wikipedia', '20200501.en')
