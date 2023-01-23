@@ -5,7 +5,7 @@ import pickle5 as pickle
 import random
 import datasets
 import sys
-from utility import import_baroni
+from utility import import_baroni, text_preprocessing
 
 def main ():
     neg_file = "../data_shared/eacl2012-data/negative-examples.txtinput"
@@ -36,11 +36,12 @@ def main ():
         for word in words:
             if word in baroni_set and sentence_counter[word] < int(max_context):
                 
-                    collected_sentences.append(sentence)
+                    collected_sentences.append(text_preprocessing(sentence))
                     sentence_counter[word] += 1
+                    continue
 
 
-    with open(f'../data_shared/curated1-10/curated{max_context}.pickle', 'wb') as handle:
+    with open(f'../data_shared/fixed/curated{max_context}.pickle', 'wb') as handle:
         pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("collected_sentences    :" , collected_sentences[:10])
