@@ -47,7 +47,7 @@ def text_preprocessing(
     """
     for x in text.lower(): 
         if x in punctuations: 
-            text = text.replace(x, "")
+            text = text.replace(x, " ")
 
     # Removing words that have numbers in them
     text = re.sub(r'\w*\d\w*', '', text)
