@@ -28,7 +28,7 @@ def main ():
     # Shuffle the order of the sentences in wikidata
     random.shuffle(wikidata)
 
-    for i in tqdm(range(0,1000,100)):
+    for i in tqdm(range(1,10,1)):
         max_context = i
     # Iterate through the shuffled list of sentences
         for sentence in wikidata:
@@ -40,7 +40,7 @@ def main ():
                         collected_sentences.append(sentence)
                         sentence_counter[word] += 1
 
-        with open(f'../data_distrembed/curated{max_context}_random.pickle', 'wb') as handle:
+        with open(f'../data_distrembed/curated1-10/curated{max_context}.pickle', 'wb') as handle:
             pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print("max_context   :" , max_context)
