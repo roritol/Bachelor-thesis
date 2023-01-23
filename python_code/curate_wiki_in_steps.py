@@ -28,7 +28,7 @@ def main ():
     # Shuffle the order of the sentences in wikidata
     random.shuffle(wikidata)
 
-    for i in tqdm(range(1,10,1)):
+    for i in tqdm(range(1,21,5)):
         max_context = i
     # Iterate through the shuffled list of sentences
         for sentence in wikidata:
