@@ -62,10 +62,10 @@ def text_preprocessing(
     text = text.lower()
 
     # Converting all our text to a list 
-    text = text.split(' ')
+#     text = text.split(' ')
 
     # Droping empty strings
-    text = [x for x in text if x!='']
+#     text = [x for x in text if x!='']
 
     # Droping stop words
 #     text = [x for x in text if x not in stop_words]
