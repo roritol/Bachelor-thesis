@@ -131,6 +131,11 @@ def main():
         wikidata = datasets.load_dataset('wikipedia', '20200501.en')
         wikidata = wikidata['train']['text'][int(begin):int(end)]
 
+        print("truncating the scentences")
+        wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+                for seq in tqdm(wikidata)
+                for sentence in seq.split(".")]
+
     # import ast
     # with open('../data_shared/wiki_subset.txt') as f:
     #     wikidata = f.read()
@@ -138,10 +143,7 @@ def main():
     # wikidata = ast.literal_eval(wikidata)
 
     # wikidata = wikidata['text'][int(begin):int(end)]
-    print("truncating the scentences")
-    wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-            for seq in tqdm(wikidata)
-            for sentence in seq.split(".")]
+    
 
     
 
