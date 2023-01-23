@@ -29,19 +29,19 @@ def main ():
     collected_sentences = []
     sentence_counter = {word: int(0) for word in baroni_set}
     # Shuffle the order of the sentences in wikidata
-    random.shuffle(wikidata)
 
     # Iterate through the shuffled list of sentences
     for sentence in wikidata:
-        
+        random.shuffle(wikidata)
         words = sentence.split()
         for word in words:
             if word in baroni_set and sentence_counter[word] < int(max_context):
                 
                     collected_sentences.append(sentence)
                     sentence_counter[word] += 1
+                    
 
-    with open(f'../data_distrembed/curated{max_context}.pickle', 'wb') as handle:
+    with open(f'../data_shared/curated1-10/curated{max_context}.pickle', 'wb') as handle:
         pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("collected_sentences    :" , collected_sentences[:10])
