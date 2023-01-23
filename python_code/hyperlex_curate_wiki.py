@@ -5,12 +5,18 @@ import pickle5 as pickle
 import random
 import datasets
 import sys
-from utility import import_baroni
+from utility import import_hyperlex
+import pandas as pd
 
 def main ():
-    neg_file = "../data_shared/eacl2012-data/negative-examples.txtinput"
-    pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
-    results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
+    
+    file = "../data_shared/hyperlex-data/hyperlex-all.txt"
+    HyperLex = pd.DataFrame(import_hyperlex(file))
+
+    HyperLex.columns = HyperLex.iloc[0]
+    HyperLex = HyperLex.iloc[1:].reset_index(drop=True)
+
+    HyperLex_set = set(HyperLex["WORD1"].values.tolist() + HyperLex["WORD2"].values.tolist())
 
     max_length = 40
     max_context = int(sys.argv[1])
@@ -27,25 +33,26 @@ def main ():
             for sentence in seq.split(".")]
 
     collected_sentences = []
-    sentence_counter = {word: int(0) for word in baroni_set}
+    sentence_counter = {word: int(0) for word in HyperLex_set}
     # Shuffle the order of the sentences in wikidata
-    random.shuffle(wikidata)
+
     # Iterate through the shuffled list of sentences
-    for sentence in tqdm(wikidata):
+    for sentence in wikidata:
+        random.shuffle(wikidata)
         words = sentence.split()
         for word in words:
-            if word in baroni_set and sentence_counter[word] < int(max_context):
+            if word in HyperLex_set and sentence_counter[word] < int(max_context):
                 
                     collected_sentences.append(sentence)
                     sentence_counter[word] += 1
+                    
 
-
-    with open(f'../data_shared/curated1-10/curated{max_context}.pickle', 'wb') as handle:
+    with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}.pickle', 'wb') as handle:
         pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("collected_sentences    :" , collected_sentences[:10])
     print("sentence_counter       :", sentence_counter)
-    print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(baroni_set)}")
+    print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(HyperLex_set)}")
     print("max_context            :", max_context)
     print("max_length sentence    :", max_length)
 

@@ -37,6 +37,18 @@ def import_baroni(neg_file, pos_file):
 
     return results_neg_file, results_pos_file, baroni, baroni_set
 
+def import_hyperlex(file):
+    results = []
+    with open(file) as f:
+        line = f.readline()
+        while line:
+            results.append(line.strip().split(" "))
+            line = f.readline()
+    f.close()
+
+    return results
+
+
 def text_preprocessing(
     text:list,
     punctuations = r'''!()-[]{};:'"\,<>./?@#$%^&*_“~''',
