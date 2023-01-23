@@ -125,7 +125,7 @@ def main():
     
     df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
 
-    for i in range(100,1000,100):
+    for i in range(1,10,1):
         max_context = i 
 
         if use_curated_data:
@@ -196,7 +196,7 @@ def main():
         context_dict = Context_dict()
         context_dict.fit(tok.words(wikidata), baroni)
 
-        ft = fasttext.load_model("../data/cc.en.300.bin")
+        ft = fasttext.load_model("../data/cc.en.100.bin")
 
         # Calculate number of batches 
         n_batches = 1 + (len(wikidata[:]) // batch_size)
@@ -242,8 +242,8 @@ def main():
         df1['empirical KL score'] = emp_kl
         df1['empirical COS score'] = emp_cos
 
-        df1.to_csv(f'../data_shared/df_curated{max_context}_diag_{is_diagonal}.csv', index=False)
-        with open(f'../data_shared/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
+        
+        with open(f'../data_shared/df_curated1-10/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
             pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print(df1)
