@@ -125,7 +125,7 @@ def main():
     
     df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
 
-    for i in range(1,10,1):
+    for i in tqdm(range(1,21,5)):
         max_context = i 
 
         if use_curated_data:
@@ -150,7 +150,7 @@ def main():
 # BERT METHOD
 
         if save_vocab:
-            with open(f'../data_distrembed/curated1-10/vocab_is_diagonal_{is_diagonal}{i}.pickle', 'wb') as f:
+            with open(f'../data_shared/curated1-10/vocab_is_diagonal_{is_diagonal}{i}.pickle', 'wb') as f:
                 pickle.dump(vocab,f)
 
         embavg = EmbedAverages(len(vocab), dim=768)
