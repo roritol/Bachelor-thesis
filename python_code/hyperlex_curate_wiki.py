@@ -45,7 +45,7 @@ def main ():
                 
                     collected_sentences.append(sentence)
                     sentence_counter[word] += 1
-                    continue
+                    pass
                     
 
     with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}.pickle', 'wb') as handle:
