@@ -35,16 +35,17 @@ def main ():
     collected_sentences = []
     sentence_counter = {word: int(0) for word in HyperLex_set}
     # Shuffle the order of the sentences in wikidata
-
+    random.shuffle(wikidata)
     # Iterate through the shuffled list of sentences
     for sentence in wikidata:
-        random.shuffle(wikidata)
+        
         words = sentence.split()
         for word in words:
             if word in HyperLex_set and sentence_counter[word] < int(max_context):
                 
                     collected_sentences.append(sentence)
                     sentence_counter[word] += 1
+                    continue
                     
 
     with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}.pickle', 'wb') as handle:
