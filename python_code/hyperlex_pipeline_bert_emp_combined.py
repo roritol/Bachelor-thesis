@@ -120,7 +120,8 @@ def main():
     window = 5
 
     file = "../data_shared/hyperlex-data/hyperlex-all.txt"
-    HyperLex = pd.DataFrame(file)
+
+    HyperLex = pd.DataFrame(import_hyperlex(file))
 
     HyperLex.columns = HyperLex.iloc[0]
     HyperLex = HyperLex.iloc[1:].reset_index(drop=True)
