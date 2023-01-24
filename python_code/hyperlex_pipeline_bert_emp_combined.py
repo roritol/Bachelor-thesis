@@ -181,7 +181,9 @@ def main():
             words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
             out = model(**mbart_input, return_dict=True)
+            print(out.keys)
             embs = out['last_hidden_state'].to(device='cpu')
+
 
             for b in range(len(seqb)):
                 # accumulate eos token
@@ -256,6 +258,13 @@ def main():
     HyperLex['bert COS score'] = bert_cos
     HyperLex['empirical KL score'] = emp_kl
     HyperLex['empirical COS score'] = emp_cos
+
+    pd.to_numeric(HyperLex['bert KL score'])
+    pd.to_numeric(HyperLex['bert COS score'])
+    pd.to_numeric(HyperLex['empirical KL score'])
+    pd.to_numeric(HyperLex['empirical COS score'])
+
+    
 
     with open(f'../data_shared/hyperlex_output/curated/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
         pickle.dump(HyperLex, handle, protocol=pickle.HIGHEST_PROTOCOL)
