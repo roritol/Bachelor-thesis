@@ -131,7 +131,7 @@ def main():
 
     if use_curated_data:
         print("open curated data:")
-        with open(f'../data_distrembed/curated{max_context}_random.pickle', 'rb') as f:
+        with open(f'../data_shared/hyperlex_output_curated/curated{max_context}_random.pickle', 'rb') as f:
             wikidata = pickle.load(f)
     else:
         wikidata = datasets.load_dataset('wikipedia', '20200501.en')
@@ -257,7 +257,7 @@ def main():
     HyperLex['empirical KL score'] = emp_kl
     HyperLex['empirical COS score'] = emp_cos
 
-    with open(f'../data_shared/hyperlex/curated/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
+    with open(f'../data_shared/hyperlex_output/curated/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
         pickle.dump(HyperLex, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     
