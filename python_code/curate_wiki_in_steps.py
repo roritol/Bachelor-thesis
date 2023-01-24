@@ -39,7 +39,7 @@ def main ():
                     
                         collected_sentences.append(text_preprocessing(sentence))
                         sentence_counter[word] += 1
-                        continue
+                        pass
 
         with open(f'../data_shared/curated1-10/curated{max_context}.pickle', 'wb') as handle:
             pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
