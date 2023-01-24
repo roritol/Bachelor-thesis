@@ -37,7 +37,7 @@ def main ():
     # Shuffle the order of the sentences in wikidata
     random.shuffle(wikidata)
     # Iterate through the shuffled list of sentences
-    for sentence in wikidata:
+    for sentence in tqdm(wikidata):
         
         words = sentence.split()
         for word in words:
