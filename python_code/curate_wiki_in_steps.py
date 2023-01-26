@@ -14,12 +14,12 @@ def main ():
 
     max_length = 40
     max_context = int(sys.argv[1])
-    # begin = 50000
-    # end = 100000
+    begin = 50000
+    end = 2000000
 
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    # wikidata = wikidata['train']['text'][int(begin):int(end)]
-    wikidata = wikidata['train']['text']
+    wikidata = wikidata['train']['text'][int(begin):int(end)]
+    # wikidata = wikidata['train']['text']
 
     print("truncating the scentences")
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
@@ -28,8 +28,9 @@ def main ():
 
     
     # Shuffle the order of the sentences in wikidata
-    
-    for i in tqdm(range(1, 6)):
+    print("start the loops")
+    for i in range(1, 6):
+        print(i)
         collected_sentences = []
         sentence_counter = {word: int(0) for word in baroni_set}
         random.shuffle(wikidata)
@@ -47,11 +48,11 @@ def main ():
         with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{i}.pickle', 'wb') as handle:
             pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    print("collected_sentences    :" , collected_sentences[:10])
-    print("sentence_counter       :", sentence_counter)
-    print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(baroni_set)}")
-    print("max_context            :", max_context)
-    print("max_length sentence    :", max_length)
+        print("collected_sentences    :" , collected_sentences[:10])
+        print("sentence_counter       :", sentence_counter)
+        print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(baroni_set)}")
+        print("max_context            :", max_context)
+        print("max_length sentence    :", max_length)
 
 if __name__ == '__main__':
     main()
