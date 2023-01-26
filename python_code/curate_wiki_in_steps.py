@@ -12,7 +12,6 @@ def main ():
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
 
     max_length = 40
-    max_context = int(sys.argv[1])
 
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # wikidata = wikidata['train']['text'][int(begin):int(end)]
@@ -32,7 +31,9 @@ def main ():
     # Iterate through the shuffled list of sentences
     max_context = 0
     counter = 0 
-    for sentence in wikidata:
+    for sentence in tqdm(wikidata):
+        if max_context == 30:
+            break
         
         words = sentence.split()
         for word in words:
@@ -40,23 +41,24 @@ def main ():
                 
                     collected_sentences.append(text_preprocessing(sentence))
                     sentence_counter[word] += 1
-                    break
 
-        if all(val == max_context for val in sentence_counter.values()):
-            print("All keys have reached their max context.")
-            with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{counter}.pickle', 'wb') as handle:
-                pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            
-            collected_sentences = []
-            sentence_counter = {word: int(0) for word in baroni_set}
-            counter += 1
+                    if all(val == max_context for val in sentence_counter.values()):
+                        print("All keys have reached their max context.")
+                        with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{counter}.pickle', 'wb') as handle:
+                            pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+                        collected_sentences = []
+                        sentence_counter = {word: int(0) for word in baroni_set}
+                        counter += 1
+                        if counter == 6:
+                            counter = 0
+                            max_context += 5
+                    
+                    break
+    
+           
         
-        if counter == 5:
-            counter = 0
-            if max_context == 25:
-                break
-            
-            max_context += 5
+        
         
         
         
