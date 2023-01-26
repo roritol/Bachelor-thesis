@@ -47,6 +47,8 @@ def main ():
             with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{counter}.pickle', 'wb') as handle:
                 pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
             
+            collected_sentences = []
+            sentence_counter = {word: int(0) for word in baroni_set}
             counter += 1
         
         if counter == 5:
