@@ -1,4 +1,5 @@
-
+from collections import Counter
+from tqdm import trange
 from tqdm import tqdm
 import pickle5 as pickle 
 import random
@@ -12,6 +13,9 @@ def main ():
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
 
     max_length = 40
+    max_context = int(sys.argv[1])
+    # begin = 50000
+    # end = 100000
 
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
     # wikidata = wikidata['train']['text'][int(begin):int(end)]
@@ -22,52 +26,32 @@ def main ():
             for seq in tqdm(wikidata)
             for sentence in seq.split(".")]
 
-    collected_sentences = []
-    sentence_counter = {word: int(0) for word in baroni_set}
     
     # Shuffle the order of the sentences in wikidata
-    random.shuffle(wikidata)
     
-    # Iterate through the shuffled list of sentences
-    max_context = 0
-    counter = 0 
-    for sentence in tqdm(wikidata):
-        if max_context == 30:
-            break
-        
-        words = sentence.split()
-        for word in words:
-            if word in baroni_set and sentence_counter[word] < int(max_context):
-                
-                    collected_sentences.append(text_preprocessing(sentence))
-                    sentence_counter[word] += 1
-
-                    if all(val == max_context for val in sentence_counter.values()):
-                        print("All keys have reached their max context.")
-                        with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{counter}.pickle', 'wb') as handle:
-                            pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-                        collected_sentences = []
-                        sentence_counter = {word: int(0) for word in baroni_set}
-                        counter += 1
-                        if counter == 6:
-                            counter = 0
-                            max_context += 5
+    for i in tqdm(range(1, 6)):
+        collected_sentences = []
+        sentence_counter = {word: int(0) for word in baroni_set}
+        random.shuffle(wikidata)
+        # Iterate through the shuffled list of sentences
+        for sentence in tqdm(wikidata):
+            words = sentence.split()
+            for word in words:
+                if word in baroni_set and sentence_counter[word] < int(max_context):
                     
-                    break
-    
-           
-        
-        
-        
-        
-        
+                        collected_sentences.append(text_preprocessing(sentence))
+                        sentence_counter[word] += 1
+                        break
 
-    print("max_context   :" , max_context)
-    print("max_length sentence    :", max_length)
+
+        with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{i}.pickle', 'wb') as handle:
+            pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    print("collected_sentences    :" , collected_sentences[:10])
     print("sentence_counter       :", sentence_counter)
     print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(baroni_set)}")
-        
+    print("max_context            :", max_context)
+    print("max_length sentence    :", max_length)
 
 if __name__ == '__main__':
     main()
