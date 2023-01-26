@@ -38,7 +38,7 @@ def main ():
                 
                     collected_sentences.append(text_preprocessing(sentence))
                     sentence_counter[word] += 1
-                    pass
+                    break
 
 
     with open(f'../data_shared/fixed/curated{max_context}.pickle', 'wb') as handle:
