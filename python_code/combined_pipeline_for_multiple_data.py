@@ -125,7 +125,7 @@ def main():
     
    
     for j in tqdm(range(1,6)):
-        for i in tqdm(range(0,26,5)):
+        for i in tqdm(range(5,26,5)):
             df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
             max_context = i 
 
