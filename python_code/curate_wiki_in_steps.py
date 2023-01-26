@@ -51,7 +51,11 @@ def main ():
         
         if counter == 5:
             counter = 0
+            if max_context == 25:
+                break
+            
             max_context += 5
+        
         
         
 
