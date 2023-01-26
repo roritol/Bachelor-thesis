@@ -59,10 +59,10 @@ def main ():
         
         
 
-        print("max_context   :" , max_context)
-        print("max_length sentence    :", max_length)
-        print("sentence_counter       :", sentence_counter)
-        print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(baroni_set)}")
+    print("max_context   :" , max_context)
+    print("max_length sentence    :", max_length)
+    print("sentence_counter       :", sentence_counter)
+    print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(baroni_set)}")
         
 
 if __name__ == '__main__':
