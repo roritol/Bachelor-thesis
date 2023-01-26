@@ -25,24 +25,35 @@ def main ():
 
     collected_sentences = []
     sentence_counter = {word: int(0) for word in baroni_set}
+    
     # Shuffle the order of the sentences in wikidata
     random.shuffle(wikidata)
-
-    for i in tqdm(range(1,21,5)):
-        max_context = i
+    
     # Iterate through the shuffled list of sentences
-        for sentence in wikidata:
+    max_context = 0
+    counter = 0 
+    for sentence in wikidata:
         
-            words = sentence.split()
-            for word in words:
-                if word in baroni_set and sentence_counter[word] < int(max_context):
-                    
-                        collected_sentences.append(text_preprocessing(sentence))
-                        sentence_counter[word] += 1
-                        break
+        words = sentence.split()
+        for word in words:
+            if word in baroni_set and sentence_counter[word] < int(max_context):
+                
+                    collected_sentences.append(text_preprocessing(sentence))
+                    sentence_counter[word] += 1
+                    break
 
-        with open(f'../data_shared/curated1-10/curated{max_context}.pickle', 'wb') as handle:
-            pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        if all(val == max_context for val in sentence_counter.values()):
+            print("All keys have reached their max context.")
+            with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{counter}.pickle', 'wb') as handle:
+                pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            
+            counter += 1
+        
+        if counter == 5:
+            counter = 0
+            max_context += 5
+        
+        
 
         print("max_context   :" , max_context)
         print("max_length sentence    :", max_length)
