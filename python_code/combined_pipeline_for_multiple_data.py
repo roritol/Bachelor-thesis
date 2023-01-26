@@ -109,7 +109,7 @@ def main():
     max_context = int(sys.argv[2])
     use_curated_data = bool(int(sys.argv[3]))
     
-    save_vocab = True
+    save_vocab = False
     batch_size = 200
     unk_thresh = 2
     max_length = 40
@@ -123,152 +123,153 @@ def main():
     pos_file = "../data_shared/eacl2012-data/positive-examples.txtinput"
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
-    df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
+   
+    for j in tqdm(range(1,6)):
+        for i in tqdm(range(0,26,5)):
+            df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
+            max_context = i 
 
-    for i in tqdm(range(1,21,5)):
-        max_context = i 
-
-        if use_curated_data:
-            print("open curated data:")
-            with open(f'../data_shared/curated1-10/curated{max_context}.pickle', 'rb') as f:
-                wikidata = pickle.load(f)
-        else:
-            wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-            wikidata = wikidata['train']['text'][int(begin):int(end)]
-            print("truncating the scentences")
-            wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-                for seq in tqdm(wikidata)
-                for sentence in seq.split(".")]
-
-
-        tok = Tokenizer()
-        vocab = Vocab()
-        print("fitting the vocab")
-        vocab.fit(tok.words(wikidata), baroni)
+            if use_curated_data:
+                print("open curated data:")
+                with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{j}.pickle', 'rb') as f:
+                    wikidata = pickle.load(f)
+            else:
+                wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+                wikidata = wikidata['train']['text'][int(begin):int(end)]
+                print("truncating the scentences")
+                wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+                    for seq in tqdm(wikidata)
+                    for sentence in seq.split(".")]
 
 
-# BERT METHOD
+            tok = Tokenizer()
+            vocab = Vocab()
+            print("fitting the vocab")
+            vocab.fit(tok.words(wikidata), baroni)
 
-        if save_vocab:
-            with open(f'../data_distrembed/curated1-10/vocab_is_diagonal_{is_diagonal}{i}.pickle', 'wb') as f:
-                pickle.dump(vocab,f)
 
-        embavg = EmbedAverages(len(vocab), dim=768)
-        model = DistilBertModel.from_pretrained("distilbert-base-uncased")
-        model.to(device=device)
+        # BERT METHOD
 
-        n_batches = 1 + (len(wikidata[:]) // batch_size)
+            if save_vocab:
+                with open(f'../data_distrembed/curated1-10/vocab_is_diagonal_{is_diagonal}{i}.pickle', 'wb') as f:
+                    pickle.dump(vocab,f)
 
-        # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
-        with torch.no_grad():
-            for k in trange(n_batches):
+            embavg = EmbedAverages(len(vocab), dim=768)
+            model = DistilBertModel.from_pretrained("distilbert-base-uncased")
+            model.to(device=device)
+
+            n_batches = 1 + (len(wikidata[:]) // batch_size)
+
+            # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
+            with torch.no_grad():
+                for k in trange(n_batches):
+                    # grab a batch_size chunk from seqs (wiki data)
+                    seqb = wikidata[batch_size*k:batch_size*(k+1)]
+                    # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
+                    words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
+                    mbart_input = subw.convert_to_tensors("pt").to(device=device)
+                    out = model(**mbart_input, return_dict=True)
+                    embs = out['last_hidden_state'].to(device='cpu')
+
+                    for b in range(len(seqb)):
+                        # accumulate eos token
+                        for i, w in enumerate(words[b]):
+                            span = subw.word_to_tokens(b, i)
+                            if span is None:
+                                continue
+                            
+                            if w not in vocab._tok_to_id:
+                                continue
+
+                            vec = embs[b, span.start]
+                            embavg.add(vocab._tok_to_id[w], vec)
+
+                torch.cuda.empty_cache()
+            
+            if save_vocab:
+                torch.save(embavg, f"../data_distrembed/is_diagonal_{is_diagonal}{i}_vocab.embavg.pt")
+                # embavg = torch.load('../data_distrembed/first10.avgs.pt')
+
+
+        # EMPIRICAL METHOD
+
+
+            context_dict = Context_dict()
+            context_dict.fit(tok.words(wikidata), baroni)
+
+            ft = fasttext.load_model("../data/cc.en.100.bin")
+
+            # Calculate number of batches 
+            n_batches = 1 + (len(wikidata[:]) // batch_size)
+            
+            for k in tqdm(range(n_batches)):
                 # grab a batch_size chunk from seqs (wiki data)
                 seqb = wikidata[batch_size*k:batch_size*(k+1)]
-                # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
-                words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
-                mbart_input = subw.convert_to_tensors("pt").to(device=device)
-                out = model(**mbart_input, return_dict=True)
-                embs = out['last_hidden_state'].to(device='cpu')
+                words, _ = tok(seqb)
+                all_text = [word for sentence in words for word in sentence]
+                context_dict._update(all_text, baroni, window)
 
-                for b in range(len(seqb)):
-                    # accumulate eos token
-                    for i, w in enumerate(words[b]):
-                        span = subw.word_to_tokens(b, i)
-                        if span is None:
-                            continue
-                        
-                        if w not in vocab._tok_to_id:
-                            continue
-
-                        vec = embs[b, span.start]
-                        embavg.add(vocab._tok_to_id[w], vec)
-
-            torch.cuda.empty_cache()
-        
-        if save_vocab:
-            torch.save(embavg, f"../data_distrembed/is_diagonal_{is_diagonal}{i}_vocab.embavg.pt")
-            # embavg = torch.load('../data_distrembed/first10.avgs.pt')
+            covariance = calculate_covariance(context_dict._context_dict, ft, window)
 
 
-    # EMPIRICAL METHOD
+        # COMBINE METHODS IN DATAFRAME
 
 
-        context_dict = Context_dict()
-        context_dict.fit(tok.words(wikidata), baroni)
+            # get true label in a list for neg and pos files 
+            baroni_pos, baroni_neg, baroni_label = create_combined_subset(results_neg_file, results_pos_file, context_dict)
+            
+            # MAKE DATAFRAME
+            df1 = pd.DataFrame(baroni_label, columns =['Wordpair', 'True label'])
 
-        ft = fasttext.load_model("../data/cc.en.100.bin")
+            # CALCULATE KL and COS
+            bert_kl = []
+            bert_cos = []
+            emp_kl = []
+            emp_cos = []
 
-        # Calculate number of batches 
-        n_batches = 1 + (len(wikidata[:]) // batch_size)
-        
-        for k in tqdm(range(n_batches)):
-            # grab a batch_size chunk from seqs (wiki data)
-            seqb = wikidata[batch_size*k:batch_size*(k+1)]
-            words, _ = tok(seqb)
-            all_text = [word for sentence in words for word in sentence]
-            context_dict._update(all_text, baroni, window)
+            print("CALCULATE KL and COS")
+            for wordpair in tqdm((baroni_pos + baroni_neg)):
+                bert_kl.append(calculate_kl_bert(wordpair, embavg, is_diagonal, vocab))
+                bert_cos.append(bert_cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
+                                                        embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
 
-        covariance = calculate_covariance(context_dict._context_dict, ft, window)
-
-
-    # COMBINE METHODS IN DATAFRAME
-
-
-        # get true label in a list for neg and pos files 
-        baroni_pos, baroni_neg, baroni_label = create_combined_subset(results_neg_file, results_pos_file, context_dict)
-        
-        # MAKE DATAFRAME
-        df1 = pd.DataFrame(baroni_label, columns =['Wordpair', 'True label'])
-
-        # CALCULATE KL and COS
-        bert_kl = []
-        bert_cos = []
-        emp_kl = []
-        emp_cos = []
-
-        print("CALCULATE KL and COS")
-        for wordpair in tqdm((baroni_pos + baroni_neg)):
-            bert_kl.append(calculate_kl_bert(wordpair, embavg, is_diagonal, vocab))
-            bert_cos.append(bert_cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
-                                                    embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
-
-            emp_kl.append(calculate_kl_emp(covariance, ft, wordpair, is_diagonal))
-            emp_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
-                                                    ft.get_word_vector(wordpair[1])))
+                emp_kl.append(calculate_kl_emp(covariance, ft, wordpair, is_diagonal))
+                emp_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
+                                                        ft.get_word_vector(wordpair[1])))
 
 
-        df1['bert KL score'] = bert_kl
-        df1['bert COS score'] = bert_cos
-        df1['empirical KL score'] = emp_kl
-        df1['empirical COS score'] = emp_cos
+            df1['bert KL score'] = bert_kl
+            df1['bert COS score'] = bert_cos
+            df1['empirical KL score'] = emp_kl
+            df1['empirical COS score'] = emp_cos
 
-        
-        with open(f'../data_shared/curated1-10/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
-            pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            
+            with open(f'../data_shared/fixed/df_curated{max_context}_diag_{is_diagonal}num{j}.pickle', 'wb') as handle:
+                pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        print(df1)
-        print("Diagonal             : ", is_diagonal)
-        print("----------BERT RESULTS-----------")
-        print("COS AP               : ", average_precision_score(df1["True label"], df1["bert COS score"]))
-        print("KL AP                : ", average_precision_score(df1["True label"], -df1["bert KL score"]))
-        print("--------EMPIRICAL RESULTS---------")
-        print("COS AP               : ", average_precision_score(df1["True label"], df1["empirical COS score"]))
-        print("KL AP                : ", average_precision_score(df1["True label"], -df1["empirical KL score"]))
-        print("--------------STATS---------------")
-        print("batch size           : ", batch_size)
-        print("unkown threshold     : ", unk_thresh)
-        print("context sentence     : ", max_context)
-        print("Max scentence length : ", max_length)
-        print(f"Wiki articles from  : {begin} to: {end}")
-        print("total scentences     : ", len(wikidata))
-        print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
-        
-        list1 = [f'BERT{max_context}', average_precision_score(df1["True label"], -df1["bert KL score"]), average_precision_score(df1["True label"], df1["bert COS score"])]
-        list2 = [f'EMP{max_context}',  average_precision_score(df1["True label"], -df1["empirical KL score"]), average_precision_score(df1["True label"], df1["empirical COS score"])]
-        df = pd.DataFrame([list1, list2],columns =['Max Context', 'KL Score AP', 'COS Score AP'])
-    
-        with open(f'../data_shared/curated1-10/df_AP{max_context}_{is_diagonal}.pickle', 'wb') as f:
-            pickle.dump(df, f, protocol=pickle.HIGHEST_PROTOCOL)
+            print(df1)
+            print("Diagonal             : ", is_diagonal)
+            print("----------BERT RESULTS-----------")
+            print("COS AP               : ", average_precision_score(df1["True label"], df1["bert COS score"]))
+            print("KL AP                : ", average_precision_score(df1["True label"], -df1["bert KL score"]))
+            print("--------EMPIRICAL RESULTS---------")
+            print("COS AP               : ", average_precision_score(df1["True label"], df1["empirical COS score"]))
+            print("KL AP                : ", average_precision_score(df1["True label"], -df1["empirical KL score"]))
+            print("--------------STATS---------------")
+            print("batch size           : ", batch_size)
+            print("unkown threshold     : ", unk_thresh)
+            print("context sentence     : ", max_context)
+            print("Max scentence length : ", max_length)
+            print(f"Wiki articles from  : {begin} to: {end}")
+            print("total scentences     : ", len(wikidata))
+            print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
+            
+            list1 = [f'BERT{max_context}', average_precision_score(df1["True label"], -df1["bert KL score"]), average_precision_score(df1["True label"], df1["bert COS score"])]
+            list2 = [f'EMP{max_context}',  average_precision_score(df1["True label"], -df1["empirical KL score"]), average_precision_score(df1["True label"], df1["empirical COS score"])]
+            df = pd.DataFrame([list1, list2],columns =['Max Context', 'KL Score AP', 'COS Score AP'])
+
+            with open(f'../data_shared/fixed/df_AP{max_context}_{is_diagonal}num{j}.pickle', 'wb') as f:
+                pickle.dump(df, f, protocol=pickle.HIGHEST_PROTOCOL)
 
         
 
