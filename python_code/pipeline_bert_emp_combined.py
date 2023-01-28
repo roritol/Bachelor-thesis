@@ -109,7 +109,7 @@ def main():
     max_context = int(sys.argv[2])
     use_curated_data = bool(int(sys.argv[3]))
     
-    save_vocab = True
+    save_vocab = False
     batch_size = 200
     unk_thresh = 2
     max_length = 40
