@@ -131,7 +131,7 @@ def main():
 
             if use_curated_data:
                 print("open curated data:")
-                with open(f'../data_shared/fixed/ramdom_curated0-25/curated0num{j}.pickle', 'rb') as f:
+                with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{j}.pickle', 'rb') as f:
                     wikidata = pickle.load(f)
             else:
                 wikidata = datasets.load_dataset('wikipedia', '20200501.en')
@@ -243,7 +243,7 @@ def main():
             df1['empirical KL score'] = emp_kl
             df1['empirical COS score'] = emp_cos
 
-            
+            max_context = 0
             with open(f'../data_shared/fixed/df_curated{max_context}_diag_{is_diagonal}num{j}.pickle', 'wb') as handle:
                 pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
