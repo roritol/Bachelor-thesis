@@ -243,7 +243,7 @@ def main():
             df1['empirical KL score'] = emp_kl
             df1['empirical COS score'] = emp_cos
 
-            max_context = 0
+
             with open(f'../data_shared/fixed/df_curated{max_context}_diag_{is_diagonal}num{j}.pickle', 'wb') as handle:
                 pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 

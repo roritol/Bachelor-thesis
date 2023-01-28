@@ -108,11 +108,11 @@ def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
     if bool(is_diagonal) is False:
-        covarariance = torch.eye(len(covariance_matrix1))
-        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covarariance)
-        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covarariance)
-        # p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
-        # q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+        # covarariance = torch.eye(len(covariance_matrix1))
+        # p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covarariance)
+        # q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covarariance)
+        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
         
 
     # Calculate the KL divergence between the two distributions
@@ -219,21 +219,21 @@ def calculate_covariance(context_dict, ft, window):
 def calculate_kl_emp(covariance, ft, wordpair, is_diagonal):
     mean1 = torch.from_numpy(ft.get_word_vector(wordpair[0]))
     covariance_matrix1 = covariance[wordpair[0]]
-    covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
+    # covariance_matrix1 = addDiagonal(covariance_matrix1, 0.1)
     mean2 = torch.from_numpy(ft.get_word_vector(wordpair[1]))
     covariance_matrix2 = covariance[wordpair[1]]
-    covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
+    # covariance_matrix2 = addDiagonal(covariance_matrix2, 0.1)
 
     if is_diagonal:
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
     else:
-        covarariance = torch.eye(len(covariance_matrix1))
-        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covarariance)
-        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covarariance)
+        # covarariance = torch.eye(len(covariance_matrix1))
+        # p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covarariance)
+        # q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covarariance)
         
-        # p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
-        # q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
     
         
     return float(torch.distributions.kl.kl_divergence(p, q))
