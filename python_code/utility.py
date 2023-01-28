@@ -108,8 +108,12 @@ def calculate_kl_bert(wordpair, embavg, is_diagonal, vocab):
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
     if bool(is_diagonal) is False:
-        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
-        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+        covarariance = torch.eye(len(covariance_matrix1))
+        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covarariance)
+        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covarariance)
+        # p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+        # q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+        
 
     # Calculate the KL divergence between the two distributions
     kl = torch.distributions.kl.kl_divergence(p, q)
@@ -224,8 +228,12 @@ def calculate_kl_emp(covariance, ft, wordpair, is_diagonal):
         p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix1)))
         q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=torch.diagflat(torch.diag(covariance_matrix2)))
     else:
-        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
-        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
+        covarariance = torch.eye(len(covariance_matrix1))
+        p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covarariance)
+        q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covarariance)
+        
+        # p = torch.distributions.multivariate_normal.MultivariateNormal(mean1, covariance_matrix=covariance_matrix1)
+        # q = torch.distributions.multivariate_normal.MultivariateNormal(mean2, covariance_matrix=covariance_matrix2)
     
         
     return float(torch.distributions.kl.kl_divergence(p, q))
