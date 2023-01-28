@@ -108,7 +108,7 @@ def main():
     is_diagonal = bool(int(sys.argv[1]))
     max_context = int(sys.argv[2])
     use_curated_data = bool(int(sys.argv[3]))
-    
+    save_to_folder = "sat28jan"
     save_vocab = False
     batch_size = 200
     unk_thresh = 2
@@ -125,7 +125,7 @@ def main():
     
     if use_curated_data:
         print("open curated data:")
-        with open(f'../data_shared/fixed/curated{max_context}.pickle', 'rb') as f:
+        with open(f'../data_shared/{save_to_folder}/curated{max_context}.pickle', 'rb') as f:
             wikidata = pickle.load(f)
     else:
         wikidata = datasets.load_dataset('wikipedia', '20200501.en')
@@ -250,7 +250,7 @@ def main():
     df1['empirical KL score'] = emp_kl
     df1['empirical COS score'] = emp_cos
 
-    with open(f'../data_shared/fixed/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
+    with open(f'../data_shared/{save_to_folder}/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
         pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print(df1)
@@ -276,7 +276,7 @@ def main():
     list2 = [f'EMP{max_context}',  average_precision_score(df1["True label"], -df1["empirical KL score"]), average_precision_score(df1["True label"], df1["empirical COS score"])]
     df = pd.DataFrame([list1, list2],columns =['Max Context', 'KL Score AP', 'COS Score AP'])
     
-    with open(f'../data_shared/df_AP{max_context}_random_{is_diagonal}.pickle', 'wb') as f:
+    with open(f'../data_shared/{save_to_folder}/df_AP{max_context}_random_{is_diagonal}.pickle', 'wb') as f:
         pickle.dump(df, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
