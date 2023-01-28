@@ -108,7 +108,7 @@ def main():
     is_diagonal = bool(int(sys.argv[1]))
     max_context = int(sys.argv[2])
     use_curated_data = bool(int(sys.argv[3]))
-    hidden_state = int(sys.argv[4])
+    hidden_state = -2
 
 
     save_to_folder = "sat28jan"
