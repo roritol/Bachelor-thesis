@@ -14,12 +14,12 @@ def main ():
 
     max_length = 40
     max_context = int(sys.argv[1])
-    begin = 50000
-    end = 2000000
+    # begin = 50000
+    # end = 2000000
 
     wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-    wikidata = wikidata['train']['text'][int(begin):int(end)]
-    # wikidata = wikidata['train']['text']
+    # wikidata = wikidata['train']['text'][int(begin):int(end)]
+    wikidata = wikidata['train']['text']
 
     print("truncating the scentences")
     wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
