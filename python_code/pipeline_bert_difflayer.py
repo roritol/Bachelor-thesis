@@ -178,7 +178,7 @@ def main():
                 words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
                 mbart_input = subw.convert_to_tensors("pt").to(device=device)
                 out = model(**mbart_input, return_dict=True)
-                embs = out['last_hidden_state'][i].to(device='cpu')
+                embs = out['hidden_states'][i].to(device='cpu')
 
                 for b in range(len(seqb)):
                     # accumulate eos token
