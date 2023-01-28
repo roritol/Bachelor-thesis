@@ -247,7 +247,7 @@ def main():
         print(f"Wiki articles from  : {begin} to: {end}")
         print("total scentences     : ", len(wikidata))
         print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
-        
+        print("last hidden state    : ", i)
         
 
         list1 = [f'BERT{max_context}', average_precision_score(df1["True label"], -df1["bert KL score"]), average_precision_score(df1["True label"], df1["bert COS score"])]
