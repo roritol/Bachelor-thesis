@@ -160,13 +160,13 @@ def main():
         with open('../data_distrembed/onetenth_vocab.pickle', 'wb') as f:
             pickle.dump(vocab,f)
 
-    embavg = EmbedAverages(len(vocab), dim=768)
-    model = DistilBertModel.from_pretrained("distilbert-base-uncased")
-    model.to(device=device)
+    
 
     for i in [-1,-2,-3,-4]:
         
-        
+        embavg = EmbedAverages(len(vocab), dim=768)
+        model = DistilBertModel.from_pretrained("distilbert-base-uncased")
+        model.to(device=device)
         n_batches = 1 + (len(wikidata[:]) // batch_size)
 
         # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
