@@ -165,17 +165,18 @@ def main():
     model.to(device=device)
 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
-
+    layer_idx = 3
     # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
     with torch.no_grad():
         for k in trange(n_batches):
             # grab a batch_size chunk from seqs (wiki data)
             seqb = wikidata[batch_size*k:batch_size*(k+1)]
-            # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
             words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
-            out = model(**mbart_input, return_dict=True)[2]
-            embs = out['last_hidden_state'].to(device='cpu')
+            out = model(**mbart_input, return_dict=True)
+
+            # extract the hidden state for the specified layer
+            embs = out['hidden_states'][layer_idx].to(device='cpu')
             # embs = out['hidden_states'][0, 4, :].to(device='cpu')
             # embs = torch.cat((out[0][:,0,:], out[0][:,1,:])).to(device='cpu')
 
