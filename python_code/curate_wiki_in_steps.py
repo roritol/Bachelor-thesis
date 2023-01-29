@@ -14,7 +14,7 @@ def main ():
 
     max_length = 40
     max_context = int(sys.argv[1])
-    save_file = "sat28jan"
+    save_file = "ma31jan"
     # begin = 50000
     # end = 2000000
 
