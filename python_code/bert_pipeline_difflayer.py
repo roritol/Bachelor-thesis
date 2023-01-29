@@ -174,10 +174,10 @@ def main():
             # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
             words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
-            out = model(**mbart_input, return_dict=True)
-            # embs = out['last_hidden_state'].to(device='cpu')
-            # embs = out['last_hidden_state'][0, 4, :].to(device='cpu')
-            embs = torch.cat((out[0][:,0,:], out[0][:,1,:])).to(device='cpu')
+            out = model(**mbart_input, return_dict=True)[2]
+            embs = out['last_hidden_state'].to(device='cpu')
+            # embs = out['hidden_states'][0, 4, :].to(device='cpu')
+            # embs = torch.cat((out[0][:,0,:], out[0][:,1,:])).to(device='cpu')
 
             for b in range(len(seqb)):
                 # accumulate eos token
