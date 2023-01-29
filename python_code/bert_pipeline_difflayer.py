@@ -174,10 +174,18 @@ def main():
             words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
             out = model(**mbart_input, return_dict=True, output_hidden_states=True)
+            
+            # extract the hidden state for the specified layer
+            hidden_states = out['hidden_states']
+            num_hidden_states = len(hidden_states)
+            if num_hidden_states >= 3:
+                embs = torch.cat(hidden_states[-3:]).to(device='cpu')
+            else:
+                embs = hidden_states[-1].to(device='cpu')
 
             # extract the hidden state for the specified layer
             # embs = out['hidden_states'][layer_idx].to(device='cpu')
-            embs = torch.cat([out[0, 4, :] for out in out['hidden_states'][-3:]])
+            # embs = torch.cat([outputs[0, 4, :] for outputs in out['hidden_states'][-3:]]).to(device='cpu')
 
             # embs = torch.cat((out['hidden_states'][:,0,:], out[0][:,1,:])).to(device='cpu')
 
