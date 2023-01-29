@@ -163,7 +163,7 @@ def main():
 
 
     if save_vocab:
-        with open('../data_distrembed/onetenth_vocab.pickle', 'wb') as f:
+        with open(f'../data_distrembed/curated1-10/vocab_is_diagonal_{is_diagonal}{i}.pickle', 'wb') as f:
             pickle.dump(vocab,f)
 
     embavg = EmbedAverages(len(vocab), dim=768)
@@ -181,9 +181,7 @@ def main():
             words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
             out = model(**mbart_input, return_dict=True)
-            print(out.keys)
             embs = out['last_hidden_state'].to(device='cpu')
-
 
             for b in range(len(seqb)):
                 # accumulate eos token
@@ -253,6 +251,7 @@ def main():
         emp_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
                                                 ft.get_word_vector(wordpair[1])))
 
+    print("bert_cos", bert_cos)
 
     HyperLex['bert KL score'] = bert_kl
     HyperLex['bert COS score'] = bert_cos
@@ -260,13 +259,13 @@ def main():
     HyperLex['empirical COS score'] = emp_cos
 
     pd.to_numeric(HyperLex['bert KL score'])
-    pd.to_numeric(HyperLex['bert COS score'])
+    # pd.to_numeric(HyperLex['bert COS score'])
     pd.to_numeric(HyperLex['empirical KL score'])
     pd.to_numeric(HyperLex['empirical COS score'])
 
     
 
-    with open(f'../data_shared/hyperlex_output/curated/df_curated{max_context}_diag_{is_diagonal}.pickle', 'wb') as handle:
+    with open(f'../data_shared/hyperlex_output/curated/df_curated{max_context}_diag_{is_diagonal}_new.pickle', 'wb') as handle:
         pickle.dump(HyperLex, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     
