@@ -14,7 +14,7 @@ def main ():
 
     max_length = 40
     max_context = int(sys.argv[1])
-    save_to_folder = "sat28jan"
+    save_to_folder = "difflayer"
     # begin = 50000
     # end = 100000
 
