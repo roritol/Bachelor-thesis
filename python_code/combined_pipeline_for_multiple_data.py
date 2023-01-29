@@ -109,6 +109,7 @@ def main():
     max_context = int(sys.argv[2])
     use_curated_data = bool(int(sys.argv[3]))
     
+    save_file = "sat28jan"
     save_vocab = False
     batch_size = 200
     unk_thresh = 2
@@ -244,7 +245,7 @@ def main():
             df1['empirical COS score'] = emp_cos
 
 
-            with open(f'../data_shared/fixed/df_curated{max_context}_diag_{is_diagonal}num{j}.pickle', 'wb') as handle:
+            with open(f'../data_shared/{save_file}/df_curated{max_context}_diag_{is_diagonal}num{j}.pickle', 'wb') as handle:
                 pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
             print(df1)
@@ -268,7 +269,7 @@ def main():
             list2 = [f'EMP{max_context}',  average_precision_score(df1["True label"], -df1["empirical KL score"]), average_precision_score(df1["True label"], df1["empirical COS score"])]
             df = pd.DataFrame([list1, list2],columns =['Max Context', 'KL Score AP', 'COS Score AP'])
 
-            with open(f'../data_shared/fixed/df_AP{max_context}_{is_diagonal}num{j}.pickle', 'wb') as f:
+            with open(f'../data_shared/{save_file}/df_AP{max_context}_{is_diagonal}num{j}.pickle', 'wb') as f:
                 pickle.dump(df, f, protocol=pickle.HIGHEST_PROTOCOL)
 
         

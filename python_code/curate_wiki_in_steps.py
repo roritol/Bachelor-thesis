@@ -14,6 +14,7 @@ def main ():
 
     max_length = 40
     max_context = int(sys.argv[1])
+    save_file = "sat28jan"
     # begin = 50000
     # end = 2000000
 
@@ -45,7 +46,7 @@ def main ():
                         break
 
 
-        with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{i}.pickle', 'wb') as handle:
+        with open(f'../data_shared/{save_file}/curated{max_context}num{i}.pickle', 'wb') as handle:
             pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print("collected_sentences    :" , collected_sentences[:10])
