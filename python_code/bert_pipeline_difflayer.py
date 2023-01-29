@@ -176,7 +176,8 @@ def main():
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
             out = model(**mbart_input, return_dict=True)
             # embs = out['last_hidden_state'].to(device='cpu')
-            embs = torch.cat((out[0][:,0,:], out[0][:,1,:])).to(device='cpu')
+            embs = out['hidden_states'][-1].to(device='cpu')
+            # embs = torch.cat((out[0][:,0,:], out[0][:,1,:])).to(device='cpu')
 
             for b in range(len(seqb)):
                 # accumulate eos token
