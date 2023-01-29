@@ -173,7 +173,7 @@ def main():
             seqb = wikidata[batch_size*k:batch_size*(k+1)]
             words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
             mbart_input = subw.convert_to_tensors("pt").to(device=device)
-            out = model(**mbart_input, return_dict=True)
+            out = model(**mbart_input, return_dict=True, output_hidden_states=True)
 
             # extract the hidden state for the specified layer
             embs = out['hidden_states'][layer_idx].to(device='cpu')
