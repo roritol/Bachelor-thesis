@@ -109,7 +109,7 @@ def main():
     max_context = int(sys.argv[2])
     use_curated_data = bool(int(sys.argv[3]))
     
-    save_file = "sat28jan"
+    save_file = "ma31jan"
     save_vocab = False
     batch_size = 200
     unk_thresh = 2
@@ -132,7 +132,7 @@ def main():
 
             if use_curated_data:
                 print("open curated data:")
-                with open(f'../data_shared/fixed/ramdom_curated0-25/curated{max_context}num{j}.pickle', 'rb') as f:
+                with open(f'../data_shared/{save_file}/curated{max_context}num{j}.pickle', 'rb') as f:
                     wikidata = pickle.load(f)
             else:
                 wikidata = datasets.load_dataset('wikipedia', '20200501.en')
