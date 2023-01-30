@@ -31,7 +31,7 @@ def main ():
     # Shuffle the order of the sentences in wikidata
     print("start the loops")
     for i in range(1, 6):
-        for max_context in range(5,26,5):
+        for max_context in range(25,51,5):
             collected_sentences = []
             sentence_counter = {word: int(0) for word in baroni_set}
             random.shuffle(wikidata)
