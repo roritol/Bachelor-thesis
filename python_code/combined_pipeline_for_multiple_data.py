@@ -125,8 +125,8 @@ def main():
     results_neg_file, results_pos_file, baroni, baroni_set = import_baroni(neg_file, pos_file)
     
    
-    for j in tqdm(range(1,6)):
-        for i in tqdm(range(25, 51, 5)):
+    for j in tqdm(range(3,6)):
+        for i in tqdm(range(30, 51, 5)):
             df = pd.DataFrame(columns =['Max Context', 'KL Score AP', 'COS Score AP'])
             max_context = i 
 
