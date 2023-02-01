@@ -128,18 +128,7 @@ def main():
     hyperlex_set = set(HyperLex["WORD1"].values.tolist() + HyperLex["WORD2"].values.tolist())
     hyperlex = HyperLex["WORD1"].values.tolist() + HyperLex["WORD2"].values.tolist()
 
-    if use_curated_data:
-        print("open curated data:")
-        with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}.pickle', 'rb') as f:
-            wikidata = pickle.load(f)
-    else:
-        wikidata = datasets.load_dataset('wikipedia', '20200501.en')
-        wikidata = wikidata['train']['text'][int(begin):int(end)]
-
-        print("truncating the scentences")
-        wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-                for seq in tqdm(wikidata)
-                for sentence in seq.split(".")]
+   
 
     # import ast
     # with open('../data_shared/wiki_subset.txt') as f:
@@ -152,122 +141,138 @@ def main():
 
     
 
-    tok = Tokenizer()
-    vocab = Vocab()
-    print("fitting the vocab")
-    vocab.fit(tok.words(wikidata), hyperlex)
+    
 
 
 # BERT METHOD
 
+    for i in range(1, 6):
+        for max_context in [10, 50, 100]:
+            if use_curated_data:
+                print("open curated data:")
+                with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}num{i}.pickle', 'rb') as f:
+                    wikidata = pickle.load(f)
+            else:
+                wikidata = datasets.load_dataset('wikipedia', '20200501.en')
+                wikidata = wikidata['train']['text'][int(begin):int(end)]
 
-    if save_vocab:
-        with open(f'../data_distrembed/curated1-10/vocab_is_diagonal_{is_diagonal}{i}.pickle', 'wb') as f:
-            pickle.dump(vocab,f)
+                print("truncating the scentences")
+                wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+                        for seq in tqdm(wikidata)
+                        for sentence in seq.split(".")]
 
-    embavg = EmbedAverages(len(vocab), dim=768)
-    model = DistilBertModel.from_pretrained("distilbert-base-uncased")
-    model.to(device=device)
+            tok = Tokenizer()
+            vocab = Vocab()
+            print("fitting the vocab")
+            vocab.fit(tok.words(wikidata), hyperlex)
 
-    n_batches = 1 + (len(wikidata[:]) // batch_size)
+            if save_vocab:
+                with open(f'../data_distrembed/curated1-10/vocab_is_diagonal_{is_diagonal}{i}.pickle', 'wb') as f:
+                    pickle.dump(vocab,f)
 
-    # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
-    with torch.no_grad():
-        for k in trange(n_batches):
-            # grab a batch_size chunk from seqs (wiki data)
-            seqb = wikidata[batch_size*k:batch_size*(k+1)]
-            # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
-            words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
-            mbart_input = subw.convert_to_tensors("pt").to(device=device)
-            out = model(**mbart_input, return_dict=True)
-            embs = out['last_hidden_state'].to(device='cpu')
+            embavg = EmbedAverages(len(vocab), dim=768)
+            model = DistilBertModel.from_pretrained("distilbert-base-uncased")
+            model.to(device=device)
 
-            for b in range(len(seqb)):
-                # accumulate eos token
-                for i, w in enumerate(words[b]):
-                    span = subw.word_to_tokens(b, i)
-                    if span is None:
-                        continue
-                    
-                    if w not in vocab._tok_to_id:
-                        continue
+            n_batches = 1 + (len(wikidata[:]) // batch_size)
 
-                    vec = embs[b, span.start]
-                    embavg.add(vocab._tok_to_id[w], vec)
+            # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
+            with torch.no_grad():
+                for k in trange(n_batches):
+                    # grab a batch_size chunk from seqs (wiki data)
+                    seqb = wikidata[batch_size*k:batch_size*(k+1)]
+                    # tokenize the batch to list of lists containing scentences, feed to bert, add last hidden state to embs
+                    words, subw = tok(seqb)     # tokenizing the entire batch so scentences come to be stacked
+                    mbart_input = subw.convert_to_tensors("pt").to(device=device)
+                    out = model(**mbart_input, return_dict=True)
+                    embs = out['last_hidden_state'].to(device='cpu')
 
-        torch.cuda.empty_cache()
-    
-    if save_vocab:
-        torch.save(embavg, "../data_distrembed/onetenth_vocab.embavg.pt")
-        # embavg = torch.load('../data_distrembed/first10.avgs.pt')
+                    for b in range(len(seqb)):
+                        # accumulate eos token
+                        for i, w in enumerate(words[b]):
+                            span = subw.word_to_tokens(b, i)
+                            if span is None:
+                                continue
+                            
+                            if w not in vocab._tok_to_id:
+                                continue
 
+                            vec = embs[b, span.start]
+                            embavg.add(vocab._tok_to_id[w], vec)
 
-# EMPIRICAL METHOD
-
-
-    context_dict = Context_dict()
-    context_dict.fit(tok.words(wikidata), hyperlex)
-
-    ft = fasttext.load_model("../data/cc.en.100.bin")
-
-    # Calculate number of batches 
-    n_batches = 1 + (len(wikidata[:]) // batch_size)
-    
-    for k in tqdm(range(n_batches)):
-        # grab a batch_size chunk from seqs (wiki data)
-        seqb = wikidata[batch_size*k:batch_size*(k+1)]
-        words, _ = tok(seqb)
-        all_text = [word for sentence in words for word in sentence]
-        context_dict._update(all_text, hyperlex, window)
-
-    print("calculate covariance")
-    covariance = calculate_covariance(context_dict._context_dict, ft, window)
+                torch.cuda.empty_cache()
+            
+            if save_vocab:
+                torch.save(embavg, "../data_distrembed/onetenth_vocab.embavg.pt")
+                # embavg = torch.load('../data_distrembed/first10.avgs.pt')
 
 
-# COMBINE METHODS IN DATAFRAME
+        # EMPIRICAL METHOD
 
 
-    # get true label in a list for neg and pos files 
-    # baroni_pos, baroni_neg, baroni_label = create_combined_subset(results_neg_file, results_pos_file, context_dict)
-    
-    # MAKE DATAFRAME
-    # df1 = pd.DataFrame(baroni_label, columns =['Wordpair', 'True label'])
-    hyperlex_zip = zip(HyperLex["WORD1"].values.tolist(), HyperLex["WORD2"].values.tolist())
+            context_dict = Context_dict()
+            context_dict.fit(tok.words(wikidata), hyperlex)
 
-    # CALCULATE KL and COS
-    bert_kl = []
-    bert_cos = []
-    emp_kl = []
-    emp_cos = []
+            ft = fasttext.load_model("../data/cc.en.100.bin")
 
-    print("CALCULATE KL and COS")
-    for wordpair in tqdm(hyperlex_zip):
-        bert_kl.append(calculate_kl_bert(wordpair, embavg, is_diagonal, vocab))
-        bert_cos.append(bert_cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
-                                                embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
+            # Calculate number of batches 
+            n_batches = 1 + (len(wikidata[:]) // batch_size)
+            
+            for k in tqdm(range(n_batches)):
+                # grab a batch_size chunk from seqs (wiki data)
+                seqb = wikidata[batch_size*k:batch_size*(k+1)]
+                words, _ = tok(seqb)
+                all_text = [word for sentence in words for word in sentence]
+                context_dict._update(all_text, hyperlex, window)
 
-        emp_kl.append(calculate_kl_emp(covariance, ft, wordpair, is_diagonal))
-        emp_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
-                                                ft.get_word_vector(wordpair[1])))
+            print("calculate covariance")
+            covariance = calculate_covariance(context_dict._context_dict, ft, window)
 
-    # print("bert_cos", bert_cos)
 
-    HyperLex['bert KL score'] = bert_kl
-    HyperLex['bert COS score'] = bert_cos
-    HyperLex['empirical KL score'] = emp_kl
-    HyperLex['empirical COS score'] = emp_cos
+        # COMBINE METHODS IN DATAFRAME
 
-    pd.to_numeric(HyperLex['bert KL score'])
-    # pd.to_numeric(HyperLex['bert COS score'])
-    pd.to_numeric(HyperLex['empirical KL score'])
-    pd.to_numeric(HyperLex['empirical COS score'])
 
-    
+            # get true label in a list for neg and pos files 
+            # baroni_pos, baroni_neg, baroni_label = create_combined_subset(results_neg_file, results_pos_file, context_dict)
+            
+            # MAKE DATAFRAME
+            # df1 = pd.DataFrame(baroni_label, columns =['Wordpair', 'True label'])
+            hyperlex_zip = zip(HyperLex["WORD1"].values.tolist(), HyperLex["WORD2"].values.tolist())
 
-    with open(f'../data_shared/hyperlex_output/curated/df_curated{max_context}_diag_{is_diagonal}_new.pickle', 'wb') as handle:
-        pickle.dump(HyperLex, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            # CALCULATE KL and COS
+            bert_kl = []
+            bert_cos = []
+            emp_kl = []
+            emp_cos = []
 
-    
+            print("CALCULATE KL and COS")
+            for wordpair in tqdm(hyperlex_zip):
+                bert_kl.append(calculate_kl_bert(wordpair, embavg, is_diagonal, vocab))
+                bert_cos.append(bert_cosine_similarity(embavg._sum[vocab._tok_to_id.get(wordpair[0])], 
+                                                        embavg._sum[vocab._tok_to_id.get(wordpair[1])]))
+
+                emp_kl.append(calculate_kl_emp(covariance, ft, wordpair, is_diagonal))
+                emp_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
+                                                        ft.get_word_vector(wordpair[1])))
+
+            # print("bert_cos", bert_cos)
+
+            HyperLex['bert KL score'] = bert_kl
+            HyperLex['bert COS score'] = bert_cos
+            HyperLex['empirical KL score'] = emp_kl
+            HyperLex['empirical COS score'] = emp_cos
+
+            pd.to_numeric(HyperLex['bert KL score'])
+            # pd.to_numeric(HyperLex['bert COS score'])
+            pd.to_numeric(HyperLex['empirical KL score'])
+            pd.to_numeric(HyperLex['empirical COS score'])
+
+            
+
+            with open(f'../data_shared/hyperlex_output/curated/df_curated{max_context}_diag_{is_diagonal}_num{i}.pickle', 'wb') as handle:
+                pickle.dump(HyperLex, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+            
 
 
     # print(HyperLex)
