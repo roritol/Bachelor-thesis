@@ -78,7 +78,6 @@ class Context_dict:
     def __init__(self):
         self._tok_counts = Counter()
         self._context_dict = {}
-        
     
     def fit(self, data, words_of_interest):
         self._context_dict = {i : list() for i in set(words_of_interest)}
@@ -251,7 +250,7 @@ def main():
         emp_cos.append(cosine_similarity(ft.get_word_vector(wordpair[0]), 
                                                 ft.get_word_vector(wordpair[1])))
 
-    print("bert_cos", bert_cos)
+    # print("bert_cos", bert_cos)
 
     HyperLex['bert KL score'] = bert_kl
     HyperLex['bert COS score'] = bert_cos
@@ -271,22 +270,22 @@ def main():
     
 
 
-    print(HyperLex)
-    print("Diagonal             : ", is_diagonal)
-    print("----------BERT RESULTS-----------")
-    print("COS AP               : ", HyperLex['bert COS score'].corr(HyperLex['AVG_SCORE_0_10']))
-    print("KL AP                : ", HyperLex['bert KL score'].corr(HyperLex['AVG_SCORE_0_10']))
-    print("--------EMPIRICAL RESULTS---------")
-    print("COS AP               : ", HyperLex['empirical COS score'].corr(HyperLex['AVG_SCORE_0_10']))
-    print("KL AP                : ", HyperLex['empirical KL score'].corr(HyperLex['AVG_SCORE_0_10']))
-    print("--------------STATS---------------")
-    print("batch size           : ", batch_size)
-    print("unkown threshold     : ", unk_thresh)
-    print("context sentence     : ", max_context)
-    print("Max scentence length : ", max_length)
-    print(f"Wiki articles from  : {begin} to: {end}")
-    print("total scentences     : ", len(wikidata))
-    print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
+    # print(HyperLex)
+    # print("Diagonal             : ", is_diagonal)
+    # print("----------BERT RESULTS-----------")
+    # print("COS AP               : ", HyperLex['bert COS score'].corr(HyperLex['AVG_SCORE_0_10']))
+    # print("KL AP                : ", HyperLex['bert KL score'].corr(HyperLex['AVG_SCORE_0_10']))
+    # print("--------EMPIRICAL RESULTS---------")
+    # print("COS AP               : ", HyperLex['empirical COS score'].corr(HyperLex['AVG_SCORE_0_10']))
+    # print("KL AP                : ", HyperLex['empirical KL score'].corr(HyperLex['AVG_SCORE_0_10']))
+    # print("--------------STATS---------------")
+    # print("batch size           : ", batch_size)
+    # print("unkown threshold     : ", unk_thresh)
+    # print("context sentence     : ", max_context)
+    # print("Max scentence length : ", max_length)
+    # print(f"Wiki articles from  : {begin} to: {end}")
+    # print("total scentences     : ", len(wikidata))
+    # print("lowest vocab         : ", vocab._tok_counts.most_common()[-1])
     
     
 
