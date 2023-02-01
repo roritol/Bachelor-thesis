@@ -146,11 +146,11 @@ def main():
 
 # BERT METHOD
 
-    for i in range(1, 6):
+    for j in range(1, 6):
         for max_context in [10, 50, 100]:
             if use_curated_data:
                 print("open curated data:")
-                with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}num{i}.pickle', 'rb') as f:
+                with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}num{j}.pickle', 'rb') as f:
                     wikidata = pickle.load(f)
             else:
                 wikidata = datasets.load_dataset('wikipedia', '20200501.en')
@@ -269,7 +269,7 @@ def main():
 
             
 
-            with open(f'../data_shared/hyperlex_output/curated/df_curated{max_context}_diag_{is_diagonal}_num{i}.pickle', 'wb') as handle:
+            with open(f'../data_shared/hyperlex_output/curated/df_curated{max_context}_diag_{is_diagonal}_num{j}.pickle', 'wb') as handle:
                 pickle.dump(HyperLex, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
             
