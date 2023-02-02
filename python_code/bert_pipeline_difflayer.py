@@ -184,6 +184,7 @@ def main():
                 #     embs = hidden_states[-1].to(device='cpu')
 
                 # extract the hidden state for the specified layer
+
                 embs = out['hidden_states'][layer_idx].to(device='cpu')
                 # embs = torch.cat([outputs[0, 4, :] for outputs in out['hidden_states'][-3:]]).to(device='cpu')
 
