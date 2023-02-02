@@ -166,7 +166,7 @@ def main():
 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
     # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
-    for layer_idx in range(0, 12):
+    for layer_idx in range(0, 6):
         with torch.no_grad():
             for k in trange(n_batches):
                 # grab a batch_size chunk from seqs (wiki data)
@@ -184,9 +184,7 @@ def main():
                 #     embs = hidden_states[-1].to(device='cpu')
 
                 # extract the hidden state for the specified layer
-                print(out['hidden_states'])
-                quit()
-                embs = out['hidden_states'][layer_idx].to(device='cpu')
+                embs = out['hidden_states'][-1*layer_idx].to(device='cpu')
                 # embs = torch.cat([outputs[0, 4, :] for outputs in out['hidden_states'][-3:]]).to(device='cpu')
 
                 # embs = torch.cat((out['hidden_states'][:,0,:], out[0][:,1,:])).to(device='cpu')
@@ -290,7 +288,7 @@ def main():
         list2 = [f'EMP{max_context}',  average_precision_score(df1["True label"], -df1["empirical KL score"]), average_precision_score(df1["True label"], df1["empirical COS score"])]
         df = pd.DataFrame([list1, list2],columns =['Max Context', 'KL Score AP', 'COS Score AP'])
         
-        with open(f'../data_shared/{save_to_folder}/df_AP{max_context}_layer{layer_idx}.pickle', 'wb') as f:
+        with open(f'../data_shared/{save_to_folder}/df_AP{max_context}_layer_minus{layer_idx}.pickle', 'wb') as f:
             pickle.dump(df, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
