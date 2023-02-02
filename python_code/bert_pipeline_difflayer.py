@@ -166,7 +166,7 @@ def main():
 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
     # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
-    for layer_idx in [-11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1]:
+    for layer_idx in [-5, -4, -3, -2, -1]:
         with torch.no_grad():
             for k in trange(n_batches):
                 # grab a batch_size chunk from seqs (wiki data)
@@ -176,8 +176,8 @@ def main():
                 out = model(**mbart_input, return_dict=True, output_hidden_states=True)
                 
                 # extract the hidden state for the specified layer
-                # hidden_states = out['hidden_states']
-                # num_hidden_states = len(hidden_states)
+                #  hidden_states = out['hidden_states']
+                #   num_hidden_states = len(hidden_states)
                 # if num_hidden_states >= 3:
                 #     embs = torch.cat(hidden_states[-3:]).to(device='cpu')
                 # else:
