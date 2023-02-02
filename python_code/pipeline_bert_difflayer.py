@@ -110,7 +110,7 @@ def main():
     use_curated_data = bool(int(sys.argv[3]))
 
 
-    save_to_folder = "ma31jan"
+    save_to_folder = "sat28jan"
     save_vocab = False
     batch_size = 200
     unk_thresh = 2
