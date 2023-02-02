@@ -127,7 +127,7 @@ def main():
     
     if use_curated_data:
         print("open curated data:")
-        with open(f'../data_shared/{save_to_folder}/curated{max_context}.pickle', 'rb') as f:
+        with open(f'../data_shared/{save_to_folder}/curated{max_context}num1.pickle', 'rb') as f:
             wikidata = pickle.load(f)
     else:
         wikidata = datasets.load_dataset('wikipedia', '20200501.en')
@@ -171,7 +171,7 @@ def main():
     model.to(device=device)
     n_batches = 1 + (len(wikidata[:]) // batch_size)
 
-    for hidden_state in [-12, -11, -10, -9, -8, -7, -6, -5, -4]:
+    for hidden_state in [-12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1]:
     # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
         with torch.no_grad():
             for k in trange(n_batches):
@@ -234,7 +234,7 @@ def main():
         df1['bert KL score'] = bert_kl
         df1['bert COS score'] = bert_cos
 
-        with open(f'../data_shared/{save_to_folder}/df_curated{max_context}_diag_{is_diagonal}._{hidden_state}pickle', 'wb') as handle:
+        with open(f'../data_shared/{save_to_folder}/df_curated{max_context}_diag_{is_diagonal}_{hidden_state}.pickle', 'wb') as handle:
             pickle.dump(df1, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print(df1)
