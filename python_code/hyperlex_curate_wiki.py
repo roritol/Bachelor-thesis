@@ -27,36 +27,36 @@ def main ():
     # wikidata = wikidata['train']['text'][int(begin):int(end)]
     wikidata = wikidata['train']['text']
     for i in range(1, 6):
-        for max_context in [10, 50, 100]:
-            print("truncating the scentences")
-            wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
-                    for seq in tqdm(wikidata)
-                    for sentence in seq.split(".")]
 
-            collected_sentences = []
-            sentence_counter = {word: int(0) for word in HyperLex_set}
-            # Shuffle the order of the sentences in wikidata
-            random.shuffle(wikidata)
-            # Iterate through the shuffled list of sentences
-            for sentence in tqdm(wikidata):
-                
-                words = sentence.split()
-                for word in words:
-                    if word in HyperLex_set and sentence_counter[word] < int(max_context):
+        print("truncating the scentences")
+        wikidata = [sentence[:max_length].strip() if len(sentence.split()) > max_length else sentence.strip()
+                for seq in tqdm(wikidata)
+                for sentence in seq.split(".")]
+
+        collected_sentences = []
+        sentence_counter = {word: int(0) for word in HyperLex_set}
+        # Shuffle the order of the sentences in wikidata
+        random.shuffle(wikidata)
+        # Iterate through the shuffled list of sentences
+        for sentence in tqdm(wikidata):
+            
+            words = sentence.split()
+            for word in words:
+                if word in HyperLex_set and sentence_counter[word] < int(max_context):
+                    
+                        collected_sentences.append(sentence)
+                        sentence_counter[word] += 1
+                        break
                         
-                            collected_sentences.append(sentence)
-                            sentence_counter[word] += 1
-                            break
-                            
 
-            with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}num{i}.pickle', 'wb') as handle:
-                pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}num{i}.pickle', 'wb') as handle:
+            pickle.dump(collected_sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-            print("collected_sentences    :" , collected_sentences[:10])
-            print("sentence_counter       :", sentence_counter)
-            print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(HyperLex_set)}")
-            print("max_context            :", max_context)
-            print("max_length sentence    :", max_length)
+        print("collected_sentences    :" , collected_sentences[:10])
+        print("sentence_counter       :", sentence_counter)
+        print(f"sentence_counter length {len(sentence_counter)} baroni set length {len(HyperLex_set)}")
+        print("max_context            :", max_context)
+        print("max_length sentence    :", max_length)
 
 if __name__ == '__main__':
     main()
