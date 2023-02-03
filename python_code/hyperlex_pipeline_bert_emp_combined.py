@@ -146,7 +146,7 @@ def main():
 
 # BERT METHOD
 
-    for j in range(1, 6):
+    for j in range(2, 6):
         for max_context in [150]:
             if use_curated_data:
                 print("open curated data:")
