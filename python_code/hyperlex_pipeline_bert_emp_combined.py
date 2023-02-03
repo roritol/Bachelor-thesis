@@ -150,7 +150,7 @@ def main():
         for max_context in [150]:
             if use_curated_data:
                 print("open curated data:")
-                with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}num{j}.pickle', 'rb') as f:
+                with open(f'../data_shared/hyperlex_output/curated/curated{max_context}num{j}.pickle', 'rb') as f:
                     wikidata = pickle.load(f)
             else:
                 wikidata = datasets.load_dataset('wikipedia', '20200501.en')
