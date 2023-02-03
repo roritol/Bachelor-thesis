@@ -147,7 +147,7 @@ def main():
 # BERT METHOD
 
     for j in range(1, 6):
-        for max_context in [10, 50, 100]:
+        for max_context in [150]:
             if use_curated_data:
                 print("open curated data:")
                 with open(f'../data_shared/hyperlex_output/curated/hyp_curated{max_context}num{j}.pickle', 'rb') as f:
