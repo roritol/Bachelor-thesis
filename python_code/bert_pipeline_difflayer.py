@@ -166,7 +166,7 @@ def main():
 
     n_batches = 1 + (len(wikidata[:]) // batch_size)
     # no_grad() turns off the requirement of gradients by the tensor output (reduce memory usage)
-    for layer_idx in range(0, 6):
+    for layer_idx in range(3, 6):
         with torch.no_grad():
             for k in trange(n_batches):
                 # grab a batch_size chunk from seqs (wiki data)
